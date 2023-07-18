@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "169-square-and-circle",
     "306-dayofweek-ya-intern",
     "336-ivan-and-opensource",
 ]
