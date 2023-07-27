@@ -2,7 +2,7 @@
 use std::{
     fmt::{Debug, Display},
     io::{self, BufRead},
-    ops::{Add, AddAssign, Sub},
+    ops::{Add, AddAssign},
     println,
 };
 
@@ -179,56 +179,46 @@ impl BinaryIndex for usize {
     }
 }
 
-fn kadane_linear_remove_k_sum<T>(a: &[T], k: usize) -> T
-where
-    T: Ord + Debug + Display + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + Default,
-{
-    let mut max_el = a[0];
-    let mut dp = vec![vec![T::default(); k + 1]; a.len()];
-
-    dp[0][0] = T::default().max(a[0]);
-    let mut res = dp[0][0];
-
-    (1..a.len()).for_each(|i| {
-        max_el = a[i].max(max_el);
-        dp[i][0] = T::default().max(a[i] + dp[i - 1][0]);
-        res = res.max(dp[i][0]);
-        (1..=k).for_each(|j| {
-            dp[i][j] = T::default().max(dp[i - 1][j - 1]).max(a[i] + dp[i - 1][j]);
-            res = res.max(dp[i][j])
-        });
-    });
-
-    // #TODO: consider removing this
-    (0..a.len()).for_each(|i| {
-        (0..=k).for_each(|j| {
-            res = res.max(dp[i][j]);
-        });
-    });
-
-    // all array is negative
-    if max_el < T::default() {
-        max_el
-    } else {
-        res
-    }
-}
 #[cfg(test)]
 mod test {
-    #[allow(unused_imports)]
-    use {super::*, core::panic, rand::seq::SliceRandom, rand::Rng};
+    use std::ops::Sub;
 
-    #[test]
-    fn test_rotate_compare() {
-        let mut a = vec![-15, 69, 37, 99, -10, -2, 2];
-        println!("{:?}", a);
-        let res1 = ka_c_rem_k(&a, 1);
-        // a.rotate_left(3);
-        // println!("{:?}", a);
-        // let res2 = ka_c_rem_k(&a, 1);
-        // let (res3, _, _) = kadane_circ_2n(&a, |a, b| a.cmp(b));
-        // println!("{:?} {:?}", res1, res2);
-        assert_eq!(207, res1);
+
+    use {super::*, rand::seq::SliceRandom, rand::Rng};
+
+    fn kadane_linear_remove_k_sum<T>(a: &[T], k: usize) -> T
+    where
+        T: Ord + Debug + Display + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + Default,
+    {
+        let mut max_el = a[0];
+        let mut dp = vec![vec![T::default(); k + 1]; a.len()];
+
+        dp[0][0] = T::default().max(a[0]);
+        let mut res = dp[0][0];
+
+        (1..a.len()).for_each(|i| {
+            max_el = a[i].max(max_el);
+            dp[i][0] = T::default().max(a[i] + dp[i - 1][0]);
+            res = res.max(dp[i][0]);
+            (1..=k).for_each(|j| {
+                dp[i][j] = T::default().max(dp[i - 1][j - 1]).max(a[i] + dp[i - 1][j]);
+                res = res.max(dp[i][j])
+            });
+        });
+
+        // #TODO: consider removing this
+        (0..a.len()).for_each(|i| {
+            (0..=k).for_each(|j| {
+                res = res.max(dp[i][j]);
+            });
+        });
+
+        // all array is negative
+        if max_el < T::default() {
+            max_el
+        } else {
+            res
+        }
     }
 
     #[test]
@@ -268,16 +258,6 @@ mod test {
     fn test_5() {
         let a = vec![-3, -1, 5, 6, -200, -200, 5, -1];
         assert_eq!(14, run_me(&a, 1));
-    }
-
-    #[test]
-    fn test_5_rotate() {
-        let mut a = vec![-3, -1, 5, 6, -200, -200, 5, -1];
-        let res1 = run_me(&a, 1);
-        a.rotate_left(1);
-        println!("{:?}", a);
-        let res2 = run_me(&a, 1);
-        assert_eq!(14, res1);
     }
 
     #[test]
