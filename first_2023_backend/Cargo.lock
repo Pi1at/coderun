@@ -3,10 +3,25 @@
 version = 3
 
 [[package]]
+name = "a-1-find-most-frequent"
+version = "0.1.0"
+
+[[package]]
+name = "buses-ya-intern"
+version = "0.1.0"
+dependencies = [
+ "rand",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "checkers"
+version = "0.1.0"
 
 [[package]]
 name = "dayofweek-ya-intern"
@@ -14,6 +29,25 @@ version = "0.1.0"
 dependencies = [
  "rand",
 ]
+
+[[package]]
+name = "decrypt-message"
+version = "0.1.0"
+
+[[package]]
+name = "del-to-max-subarray-sum-yandex"
+version = "0.1.0"
+dependencies = [
+ "rand",
+]
+
+[[package]]
+name = "exactly-one-occur"
+version = "0.1.0"
+
+[[package]]
+name = "gcd-and-lcm-yandex"
+version = "0.1.0"
 
 [[package]]
 name = "getrandom"
@@ -37,10 +71,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
 
 [[package]]
+name = "median-out-of-three"
+version = "0.1.0"
+
+[[package]]
+name = "medians-ya-intern"
+version = "0.1.0"
+dependencies = [
+ "rand",
+]
+
+[[package]]
+name = "number-system"
+version = "0.1.0"
+dependencies = [
+ "rand",
+]
+
+[[package]]
+name = "pairwise-xor"
+version = "0.1.0"
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
+
+[[package]]
+name = "product-equal-k"
+version = "0.1.0"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "rand"
@@ -73,11 +136,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "random-swaps"
+version = "0.1.0"
+
+[[package]]
+name = "rocks-and-jewels"
+version = "0.1.0"
+
+[[package]]
+name = "server-error"
+version = "0.1.0"
+
+[[package]]
 name = "square-and-circle"
 version = "0.1.0"
 dependencies = [
  "rand",
 ]
+
+[[package]]
+name = "substring-graph"
+version = "0.1.0"
+
+[[package]]
+name = "symbols-set-min-susbstr"
+version = "0.1.0"
+
+[[package]]
+name = "trading-ya-intern"
+version = "0.1.0"
 
 [[package]]
 name = "wasi"

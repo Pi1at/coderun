@@ -1,2 +1,3 @@
-# Coderun
-solutions for [CodeRun](https://coderun.yandex.ru)
+# Solutions for [CodeRun](https://coderun.yandex.ru)
+
+На текущий момент данный проект является попыткой совместить изучение Rust с решением задач трека Бэкенд там где это возможно.
