@@ -24,6 +24,16 @@ name = "checkers"
 version = "0.1.0"
 
 [[package]]
+name = "coz"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cef55b3fe2f5477d59e12bc792e8b3c95a25bd099eadcfae006ecea136de76e2"
+dependencies = [
+ "libc",
+ "once_cell",
+]
+
+[[package]]
 name = "dayofweek-ya-intern"
 version = "0.1.0"
 dependencies = [
@@ -82,11 +92,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "mtf-encoding-decoding"
+version = "0.1.0"
+dependencies = [
+ "coz",
+ "rand",
+]
+
+[[package]]
 name = "number-system"
 version = "0.1.0"
 dependencies = [
  "rand",
 ]
+
+[[package]]
+name = "once_cell"
+version = "1.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "pairwise-xor"

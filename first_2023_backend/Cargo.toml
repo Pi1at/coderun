@@ -9,6 +9,7 @@ members = [
     "198-del-to-max-subarray-sum-yandex",
     "204-server-error",
     "251-symbols-set-min-susbstr",
+    "270-mtf-encoding-decoding",
     "286-decrypt-message",
     "300-buses-ya-intern",
     "306-dayofweek-ya-intern",
@@ -22,3 +23,5 @@ members = [
     "360-a-1-find-most-frequent",
     "361-median-out-of-three"
 ]
+[profile.release]
+debug = 1
