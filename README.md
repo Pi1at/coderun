@@ -1,3 +1,11 @@
 # Solutions for [CodeRun](https://coderun.yandex.ru)
 
-На текущий момент данный проект является попыткой совместить изучение Rust с решением задач трека Бэкенд там где это возможно.
+Rust solutions for fun and education
+
+## Backend season 1 (2023)
+
+- Just browse first_2023_backend for now
+
+## Backend season 2 (2024)
+
+- WIP

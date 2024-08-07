@@ -7,11 +7,19 @@ name = "a-1-find-most-frequent"
 version = "0.1.0"
 
 [[package]]
+name = "area-between-curves"
+version = "0.1.0"
+
+[[package]]
 name = "buses-ya-intern"
 version = "0.1.0"
 dependencies = [
  "rand",
 ]
+
+[[package]]
+name = "calendar-formatting"
+version = "0.1.0"
 
 [[package]]
 name = "cfg-if"
@@ -52,7 +60,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "diversity-improvement"
+version = "0.1.0"
+
+[[package]]
+name = "diversity-scoring"
+version = "0.1.0"
+
+[[package]]
 name = "exactly-one-occur"
+version = "0.1.0"
+
+[[package]]
+name = "find-rle-string-length"
 version = "0.1.0"
 
 [[package]]
@@ -92,6 +112,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "meetings"
+version = "0.1.0"
+
+[[package]]
+name = "mobilization"
+version = "0.1.0"
+
+[[package]]
 name = "mtf-encoding-decoding"
 version = "0.1.0"
 dependencies = [
@@ -114,6 +142,14 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "pairwise-xor"
+version = "0.1.0"
+
+[[package]]
+name = "phone-formatting"
+version = "0.1.0"
+
+[[package]]
+name = "plane-boarding"
 version = "0.1.0"
 
 [[package]]
@@ -188,6 +224,10 @@ version = "0.1.0"
 
 [[package]]
 name = "trading-ya-intern"
+version = "0.1.0"
+
+[[package]]
+name = "two-cliques"
 version = "0.1.0"
 
 [[package]]
