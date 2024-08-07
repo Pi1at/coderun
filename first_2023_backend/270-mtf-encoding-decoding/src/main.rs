@@ -34,6 +34,7 @@ pub mod xor_shift_rng {
             self.state
         }
 
+        /// Returns an iterator that generates pseudorandom numbers using the Xorshift algorithm.
         pub fn rng(self) -> impl Iterator<Item = u32> {
             let mut random = self.state;
             std::iter::repeat_with(move || {
