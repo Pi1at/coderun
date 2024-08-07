@@ -28,6 +28,7 @@ members = [
     "357-substring-graph",
     "360-a-1-find-most-frequent",
     "361-median-out-of-three",
+    "377-diversity-scoring",
     "378-diversity-improvement",
     "380-plane-boarding",
 ]
