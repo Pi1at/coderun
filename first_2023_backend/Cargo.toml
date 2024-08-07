@@ -21,7 +21,7 @@ members = [
     "352-rocks-and-jewels",
     "357-substring-graph",
     "360-a-1-find-most-frequent",
-    "361-median-out-of-three"
+    "361-median-out-of-three",
 ]
 resolver = "2"
 [profile.release]
