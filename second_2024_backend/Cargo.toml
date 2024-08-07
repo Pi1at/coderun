@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "3134-phi-backend",
 ]
 resolver = "2"
 [profile.release]
