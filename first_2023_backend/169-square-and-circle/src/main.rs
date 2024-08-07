@@ -1,63 +1,48 @@
-// 169. Квадрат и окружность
 use std::{
-    f64::consts::*,
+    f64::consts::SQRT_2,
     io::{self, BufRead},
     println,
 };
 
 fn run_me(points: &[(f64, f64)], r: f64) -> f64 {
-    points.iter().fold(0.0, |area, center| {
-        area + get_intersect_area(center.0, center.1, r)
-    })
+    points.iter().map(|center| get_intersect_area(center.0, center.1, r)).sum()
 }
 
 fn main() {
     let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
+    let mut line_iter = stdin.lock().lines().map_while(Result::ok);
 
-    let nr = line_iter
-        .next()
-        .unwrap()
-        .unwrap()
-        .split_whitespace()
-        .flat_map(|s| s.parse::<f64>())
+    let (n_dots, r) = {
+        let s_nr = line_iter.next().unwrap();
+        let mut nr = s_nr.split_whitespace().take(2);
+        (nr.next().unwrap().parse().unwrap(), nr.next().unwrap().parse().unwrap())
+    };
+
+    let dots = line_iter
+        .by_ref()
+        .take(n_dots)
+        .map(|s| {
+            let mut xy = s.split_whitespace().flat_map(str::parse);
+            (xy.next().unwrap(), xy.next().unwrap())
+        })
         .collect::<Vec<_>>();
-    let n_dots = nr[0] as usize;
-    let r = nr[1];
-    let mut dots = Vec::<(f64, f64)>::with_capacity(n_dots);
-
-    for xy in line_iter.take(n_dots) {
-        if let [x, y] = xy
-            .unwrap()
-            .split_whitespace()
-            .flat_map(|x| x.parse::<f64>())
-            .collect::<Vec<_>>()[0..2]
-        {
-            dots.push((x, y));
-        }
-    }
-
+    drop(line_iter);
     let area = run_me(&dots, r);
-    println!("{}", area);
+    println!("{area}");
 }
 
+#[allow(clippy::suspicious_operation_groupings)]
 fn get_circle_line_area(a: f64, b: f64, r: f64) -> f64 {
     // as positive
     let alpha1 = f64::atan(b / a);
     let alpha2 = f64::atan((1.0 - b) / a);
     let phi = f64::acos(a / r);
 
-    let (t_a, phi1, phi2) = if phi.is_nan() {
-        (0.0, 0.0, 0.0)
-    } else {
-        (
-            phi.min(alpha2) + phi.min(alpha1),
-            phi.min(alpha1),
-            phi.min(alpha2),
-        )
-    };
-    0.5 * (r.powi(2) * (alpha1 + alpha2 - phi1 - phi2)
-        + a.powi(2) * t_a.sin() / (phi1.cos() * phi2.cos()))
+    let (phi1, phi2) = if phi.is_nan() { (0.0, 0.0) } else { (phi.min(alpha1), phi.min(alpha2)) };
+    let t_a = phi1 + phi2;
+    0.5 * r
+        .powi(2)
+        .mul_add(alpha1 + alpha2 - t_a, a.powi(2) * t_a.sin() / (phi1.cos() * phi2.cos()))
 }
 
 fn get_intersect_area(cx: f64, cy: f64, r: f64) -> f64 {
@@ -65,15 +50,8 @@ fn get_intersect_area(cx: f64, cy: f64, r: f64) -> f64 {
     if r > SQRT_2 {
         return 1.0;
     };
-    let rcx = 1.0 - cx;
-    let rcy = 1.0 - cy;
-    get_circle_line_area(rcx, cy, r)
-    // y = 1
-        + get_circle_line_area(rcy, rcx, r)
-    // x = 0    
-        + get_circle_line_area(cx, rcy, r)
-    // y = 0    
-        + get_circle_line_area(cy, cx, r)
+    let ab = [(1.0 - cx, cy), (1.0 - cy, 1.0 - cx), (cx, 1.0 - cy), (cy, cx)];
+    ab.iter().map(|(a, b)| get_circle_line_area(*a, *b, r)).sum()
 }
 
 #[cfg(test)]
