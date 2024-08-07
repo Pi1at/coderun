@@ -1,17 +1,16 @@
+#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 use std::{
     collections::HashMap,
     io::{self, BufRead, BufWriter, Write},
-    writeln,
 };
-
-fn filter_over_bl(file: &str, bl: &[String]) -> Option<(String, String)> {
-    for bf in bl.iter() {
-        if file.starts_with(bf) {
+fn filter_over_bl(file: &str, blacklist: &[String]) -> Option<(String, String)> {
+    blacklist
+        .iter()
+        .find(|&bf| file.starts_with(bf))
+        .map(|_bf| {
             let ext = file.rfind('.').unwrap();
-            return Some((file.to_string(), file[ext..].to_string()));
-        }
-    }
-    None
+            (String::from(file), String::from(&file[ext..]))
+        })
 }
 fn main() {
     let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
@@ -25,29 +24,33 @@ fn main() {
     });
 
     let m = line_iter.next().unwrap().parse().unwrap();
-    let mut files = Vec::with_capacity(m);
+    let mut file = String::new();
+    let files = {
+        let mut files = Vec::with_capacity(m);
 
-    (0..m).for_each(|_idx| {
-        let file = line_iter.next().unwrap();
-        if let Some(v) = filter_over_bl(&file, &bl) {
-            files.push(v);
-        }
-    });
+        (0..m).for_each(|_idx| {
+            file = line_iter.next().unwrap();
+            if let Some((s1, s2)) = filter_over_bl(&file, &bl) {
+                files.push((s1, s2));
+            }
+        });
+        files
+    };
 
     let q = line_iter.next().unwrap().parse().unwrap();
-    (0..q).for_each(|_i| {
+    let mut ext: HashMap<&str, usize> = HashMap::with_capacity(files.len());
+    for _ in 0..q {
         let query = line_iter.next().unwrap(); //directory where delete file
-        let mut ext = HashMap::new();
-
-        for (file, e) in files.clone() {
-            if file.starts_with(&query) {
-                *ext.entry(e).or_insert(0) += 1;
-            }
-        }
-
+        files
+            .iter()
+            .filter(|(f, _)| f.starts_with(&query))
+            .for_each(|(_, e)| {
+                *ext.entry(e).or_default() += 1;
+            });
         let _ = writeln!(out, "{}", ext.len());
         for (e, v) in ext.drain() {
             let _ = writeln!(out, "{e}: {v}");
         }
-    })
+    }
+    drop(line_iter);
 }
