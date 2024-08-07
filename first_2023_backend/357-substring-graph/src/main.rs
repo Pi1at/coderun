@@ -1,46 +1,44 @@
 use std::collections::{HashMap, HashSet};
-use std::io::{self, BufRead};
+use std::io::{self, stdout, BufRead, BufWriter, Error, Write};
+use std::iter;
+use std::string::String;
 
-fn runme(strings: &[&str]) -> (usize, usize, Vec<String>) {
+fn run_me(strings: &[Box<str>]) -> impl Iterator<Item = String> + '_ {
     let mut links: HashMap<(&str, &str), usize> = HashMap::new();
     let mut nodes: HashSet<&str> = HashSet::new();
 
-    strings
-        .iter()
-        .map(|&x| {
-            (0..=x.len() - 3)
-                .map(|i| {
-                    let n = x.get(i..i + 3).unwrap();
-                    nodes.insert(n);
-                    n
-                })
-                .collect::<Vec<_>>()
-        })
-        .for_each(|s| {
-            for v in s.windows(2) {
-                if let &[n1, n2] = v {
-                    *links.entry((n1, n2)).or_insert(0) += 1;
-                }
+    for x in strings {
+        let mut prev_node: Option<&str> = None;
+        for i in 0..=(x.len() - 3) {
+            let n = &x[i..(i + 3)];
+            nodes.insert(n);
+            if let Some(prev) = prev_node {
+                links.entry((prev, n)).and_modify(|count| *count += 1).or_insert(1);
             }
-        });
-    let output: Vec<_> = links
-        .iter()
-        .map(|((id1, id2), &v)| format!("{} {} {}", id1, id2, v))
-        .collect();
-    (nodes.len(), links.len(), output)
+            prev_node = Some(n);
+        }
+    }
+    iter::once(nodes.len().to_string())
+        .chain(iter::once(links.len().to_string()))
+        .chain(links.into_iter().map(|((id1, id2), v)| format!("{id1} {id2} {v}")))
 }
 
-fn main() {
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
-    let n = line_iter.next().unwrap().unwrap().parse().unwrap();
-    let lines: Vec<_> = line_iter.take(n).flatten().collect();
-    let lines: Vec<_> = lines.iter().map(|x| &**x).collect();
+fn main() -> Result<(), Error> {
+    // just experimenting with strings
+    let mut writer = BufWriter::new(stdout().lock());
+    let mut line_iter = io::stdin().lock().lines().map_while(Result::ok);
+    let lines = {
+        let n = line_iter.next().unwrap().parse().unwrap();
+        line_iter.by_ref().take(n).map(String::into_boxed_str).collect::<Box<_>>()
+    };
+    drop(line_iter);
+    // lines.len() = 1..=40000
+    // line.len() = 4..=30
+    // char is a..=z
+    // probably there is better way to transform this, but it is what it is ^_^
 
-    let (v, e, rs) = runme(&lines);
-    println!("{}", v);
-    println!("{}", e);
-    for s in rs {
-        println!("{}", s)
+    for s in run_me(&lines) {
+        writeln!(writer, "{s}")?;
     }
+    Ok(())
 }
