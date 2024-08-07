@@ -1,4 +1,3 @@
-// 300. Первый герой
 // some theory
 // https://math.stackexchange.com/questions/222674/average-bus-waiting-time
 use std::{
@@ -64,14 +63,15 @@ fn horners_method(coefficients: &[isize], x: isize) -> isize {
     result
 }
 
-fn gcd_euclid(mut a: isize, mut b: isize) -> isize {
-    let mut r = a % b;
-    while r > 0 {
-        a = b % r;
-        b = r;
-        r = a;
+const fn gcd_euclid(x: isize, y: isize) -> isize {
+    let mut x = x;
+    let mut y = y;
+    while y != 0 {
+        let t = y;
+        y = x % y;
+        x = t;
     }
-    b
+    x
 }
 
 fn run_me(a: &[isize]) -> String {
@@ -87,10 +87,10 @@ fn run_me(a: &[isize]) -> String {
 
     let prob_polynom = multiply_t(a);
     let (e_poly, div_1) = power_up(&prob_polynom);
-    let up = horners_method(&e_poly, min_t);
-    let down = p * div_1;
-    let g = gcd_euclid(up, down);
-    format!("{}/{}", up / g, down / g)
+    let nominator = horners_method(&e_poly, min_t);
+    let denominator = p * div_1;
+    let g = gcd_euclid(nominator, denominator);
+    format!("{}/{}", nominator / g, denominator / g)
 }
 
 /*
@@ -98,16 +98,14 @@ fn run_me(a: &[isize]) -> String {
 Вторая строка содержит N целых положительных чисел tk​ (1≤tk≤50).
  */
 fn main() {
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
-    let _n = line_iter.next().unwrap().unwrap().parse::<usize>().unwrap();
-
-    let tk = line_iter
-        .next()
+    let tk = io::stdin()
+        .lock()
+        .lines()
+        .nth(1)
         .unwrap()
         .unwrap()
         .split_whitespace()
-        .flat_map(|s| s.parse::<isize>())
+        .flat_map(str::parse)
         .collect::<Vec<_>>();
     println!("{}", run_me(&tk));
 }
@@ -129,7 +127,7 @@ mod test {
         let up = horners_method(&e_poly, min_t);
         let down = p * div_1;
         let g = gcd_euclid(up, down);
-        println!("{}/{} g = {}", up, down, g);
+        println!("{up}/{down} g = {g}");
         assert_eq!("2650175/331632", format!("{}/{}", up / g, down / g));
     }
 }
