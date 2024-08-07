@@ -1,7 +1,4 @@
-#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
-#![warn(clippy::correctness, clippy::suspicious, clippy::complexity, clippy::perf, clippy::style)]
-
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, BufWriter, Write};
 
 use crate::treap_list::TreapList;
 
@@ -10,10 +7,15 @@ pub mod xor_shift_rng {
     use std::hash::{BuildHasher, Hasher};
 
     pub struct XorShiftRng {
-        seed: u32,
+        state: u32,
     }
 
     impl XorShiftRng {
+        // Pseudorandom number generator from the "Xorshift RNGs" paper by George Marsaglia.
+        //
+        // https://github.com/matklad/config/blob/b8ea0aad0f86d4575651a390a3c7aefb63229774/templates/snippets/src/lib.rs#L30
+        // https://github.com/rust-lang/rust/blob/1.55.0/library/core/src/slice/sort.rs#L559-L573
+
         #[must_use]
         pub fn with_random_seed() -> Self {
             #[allow(clippy::cast_possible_truncation)]
@@ -22,15 +24,19 @@ pub mod xor_shift_rng {
         }
 
         const fn with_seed(seed: u32) -> Self {
-            Self { seed }
+            Self { state: seed }
         }
 
-        // Pseudorandom number generator from the "Xorshift RNGs" paper by George Marsaglia.
-        //
-        // https://github.com/matklad/config/blob/b8ea0aad0f86d4575651a390a3c7aefb63229774/templates/snippets/src/lib.rs#L30
-        // https://github.com/rust-lang/rust/blob/1.55.0/library/core/src/slice/sort.rs#L559-L573
+        pub fn next_u32(&mut self) -> u32 {
+            self.state ^= self.state << 13;
+            self.state ^= self.state >> 17;
+            self.state ^= self.state << 5;
+            self.state
+        }
+
+        /// Returns an iterator that generates pseudorandom numbers using the Xorshift algorithm.
         pub fn rng(self) -> impl Iterator<Item = u32> {
-            let mut random = self.seed;
+            let mut random = self.state;
             std::iter::repeat_with(move || {
                 random ^= random << 13;
                 random ^= random >> 17;
@@ -86,11 +92,11 @@ pub mod implicit_treap {
         })
     }
 
-    /// .
+    /// Inserts a new node at the specified index in the treap.
     ///
     /// # Panics
     ///
-    /// Panics if index out f (1..=len+1).
+    /// Panics if the index is out of bounds (1..=len+1).
     pub fn insert<T>(tree: &mut Tree<T>, index: usize, new_node: ImplicitNode<T>) {
         assert!(1 <= index && index <= len(tree) + 1);
         let right = split(tree, index, true);
@@ -98,6 +104,11 @@ pub mod implicit_treap {
         merge(tree, right);
     }
 
+    /// Removes the node at the specified index from the treap and returns its value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds.
     pub fn remove<T>(tree: &mut Tree<T>, index: usize) -> T {
         assert!(1 <= index && index <= len(tree));
         let new_tree = {
@@ -124,6 +135,28 @@ pub mod implicit_treap {
 
         mem::replace(tree, new_tree).expect("Expected non-empty tree.").value
     }
+
+    pub fn heapify<T>(_tree: &mut Tree<T>) {
+        // TODO:
+        // ищем максимальное значение приориета среди узла и листьев
+        // compare priorities of node with its children
+        // if priority of child is greater than priority of node - swap them
+        // если больше в корне меньше - меняем местами приоритет и проходимся еще раз
+        todo!();
+    }
+
+    // void heapify (pitem t) {
+    //     if (!t) return;
+    //     pitem max = t;
+    //     if (t->l != NULL && t->l->prior > max->prior)
+    //         max = t->l;
+    //     if (t->r != NULL && t->r->prior > max->prior)
+    //         max = t->r;
+    //     if (max != t) {
+    //         swap (t->prior, max->prior);
+    //         heapify (max);
+    //     }
+    // }
 
     #[must_use]
     pub fn get<T>(tree: &Tree<T>, index: usize) -> Option<&T> {
@@ -189,7 +222,7 @@ pub mod implicit_treap {
             self.len
         }
 
-        fn update(&mut self) {
+        pub fn update(&mut self) {
             let Self { ref mut len, ref left, ref right, .. } = self;
             *len = 1;
             if let Some(ref left_node) = left {
@@ -207,29 +240,59 @@ pub mod implicit_treap {
 }
 
 pub mod treap_list {
+
     use crate::{
-        implicit_treap::{self, ImplicitNode},
+        implicit_treap::{self, ImplicitNode, Tree},
         xor_shift_rng::XorShiftRng,
     };
-
+    /// A list backed by an implicit treap.
+    ///
+    /// Provides efficient insertion, removal, and access operations.
     pub struct TreapList<T> {
         pub tree: implicit_treap::Tree<T>,
-        rng: Box<dyn Iterator<Item = u32>>,
+        rng: XorShiftRng,
     }
 
+    impl<T> From<&[T]> for TreapList<T>
+    where
+        T: PartialOrd + Copy,
+    {
+        fn from(item: &[T]) -> Self {
+            fn build<T>(a: &[T], rng: &mut impl Iterator<Item = u32>) -> Tree<T>
+            where
+                T: PartialOrd + Copy,
+            {
+                if a.is_empty() {
+                    return None;
+                }
+                let mid = a.len() / 2;
+                let mut t = ImplicitNode::new(a[mid], rng.next().unwrap());
+                t.left = build(&a[0..mid], rng);
+                t.right = build(&a[mid + 1..], rng);
+                t.update();
+                Some(t.into())
+            }
+            let mut t = Self::new();
+            let Self { ref mut tree, .. } = t;
+            *tree = build(item, &mut XorShiftRng::with_random_seed().rng());
+            //implicit_treap::heapify::<T>(tree);
+            t
+        }
+    }
     impl<T> TreapList<T>
     where
         T: PartialOrd,
     {
         /// Constructs a new, empty `TreapList<T>`.
+        #[must_use]
         pub fn new() -> Self {
-            Self { tree: None, rng: Box::new(XorShiftRng::with_random_seed().rng()) }
+            Self { tree: None, rng: XorShiftRng::with_random_seed() }
         }
 
         /// Inserts a value into the list at a particular index, shifting elements one position to the right if needed.
         pub fn insert(&mut self, index: usize, value: T) {
             let Self { ref mut tree, ref mut rng } = self;
-            implicit_treap::insert(tree, index + 1, ImplicitNode::new(value, rng.next().unwrap()));
+            implicit_treap::insert(tree, index + 1, ImplicitNode::new(value, rng.next_u32()));
         }
 
         /// Removes a value at a particular index from the list. Returns the value at the index.
@@ -295,29 +358,35 @@ pub mod treap_list {
             }
         }
     }
+
+    impl<T> Default for TreapList<T>
+    where
+        T: PartialOrd,
+    {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
 }
 
-fn run_me(input: &str, n: usize, m: usize, decrypt: bool) -> String {
+fn run_me(input: &str, m: usize, decrypt: bool) -> Box<dyn Iterator<Item = usize> + '_> {
     //pretend we start from 0, so -1 to data
     // zero-indexed treap list
-    let mut tr = TreapList::<i32>::new();
-    let mut ids: Vec<i32> = (0..m as i32).collect();
-    for i in 0..m {
-        tr.push_back(i as i32);
-    }
+
     let it = input.split_whitespace().flat_map(str::parse::<usize>).map(|x| x - 1);
     if decrypt {
-        it.map(|cur| {
+        let ids: Vec<usize> = (0..m).collect();
+        let mut tr = TreapList::from(&ids[..]);
+        Box::new(it.map(move |cur| {
             let c = tr.remove(cur);
             tr.push_front(c);
             c + 1
-        })
-        .map(|n| n.to_string())
-        .collect::<Vec<_>>()
-        .join(" ")
+        }))
     } else {
+        let mut ids: Vec<i32> = (0..m as i32).collect();
+        let mut tr = TreapList::from(&ids[..]);
         let mut min_id = 0;
-        it.map(|cur| {
+        Box::new(it.map(move |cur| {
             let id = ids[cur];
             tr.index_of(&id).map_or(0, |idx| {
                 tr.remove(idx);
@@ -326,14 +395,12 @@ fn run_me(input: &str, n: usize, m: usize, decrypt: bool) -> String {
                 ids[cur] = min_id;
                 idx + 1
             })
-        })
-        .map(|n| n.to_string())
-        .collect::<Vec<_>>()
-        .join(" ")
+        }))
     }
 }
 
 fn main() {
+    let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
     let stdin = io::stdin();
     let mut line_iter = stdin.lock().lines();
 
@@ -346,10 +413,11 @@ fn main() {
         .take(3)
         .collect::<Vec<usize>>();
     let decrypt = nmt[2] == 2;
-    let input = line_iter.next().unwrap().unwrap();
-    let result = run_me(&input, nmt[0], nmt[1], decrypt);
-    println!("{result}");
 
+    let input = line_iter.next().unwrap().unwrap();
+    run_me(&input, nmt[1], decrypt).for_each(|r| {
+        let _ = write!(out, "{r} ");
+    });
     drop(line_iter);
 }
 #[cfg(test)]
@@ -359,12 +427,18 @@ mod tests {
 
     #[test]
     fn test_1() {
-        assert_eq!("2 3 3 3 2 1 1", run_me("2 3 1 2 1 1 1", 7, 3, false).trim_end());
+        assert_eq!(
+            "2 3 3 3 2 1 1",
+            run_me("2 3 1 2 1 1 1", 3, false).map(|n| n.to_string()).collect::<Vec<_>>().join(" ")
+        );
     }
 
     #[test]
     fn test_2() {
-        assert_eq!("2 3 1 2 1 1 1", run_me("2 3 3 3 2 1 1", 7, 3, true).trim_end());
+        assert_eq!(
+            "2 3 1 2 1 1 1",
+            run_me("2 3 3 3 2 1 1", 3, true).map(|n| n.to_string()).collect::<Vec<_>>().join(" ")
+        );
     }
 
     #[test]
@@ -372,10 +446,10 @@ mod tests {
         let mut rng = rand::thread_rng();
         // length
         let max_n = 300_000usize;
-        let min_n = 1usize;
+        let min_n = 300_000usize;
         // max value
         let max_m = 300_000usize;
-        let min_m = 1usize;
+        let min_m = 300_000usize;
 
         for _ in 0..10 {
             let n = rng.gen_range(min_n..=max_n);
@@ -390,12 +464,18 @@ mod tests {
                 .map(|x| x.to_string())
                 .collect::<Vec<_>>()
                 .join(" ");
-            //dbg!(before.elapsed());
-            //let before = std::time::Instant::now();
-            let encrypted = run_me(&orig, n, m, false);
-            //dbg!(before.elapsed());
-            //let before = std::time::Instant::now();
-            let decrypted = run_me(&encrypted, n, m, true);
+            dbg!(before.elapsed());
+            let before = std::time::Instant::now();
+            let encrypted = run_me(&orig, m, false);
+            dbg!(before.elapsed());
+            let before = std::time::Instant::now();
+            let encrypted = encrypted.map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+            dbg!(before.elapsed());
+            let before = std::time::Instant::now();
+            let decrypted = run_me(&encrypted, m, true);
+            dbg!(before.elapsed());
+            let before = std::time::Instant::now();
+            let decrypted = decrypted.map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
             dbg!(before.elapsed());
             assert_eq!(orig, decrypted);
         }
