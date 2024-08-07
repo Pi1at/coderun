@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "3134-phi-backend",
+    "427-microwave",
 ]
 resolver = "2"
 [profile.release]
