@@ -31,6 +31,7 @@ members = [
     "377-diversity-scoring",
     "378-diversity-improvement",
     "380-plane-boarding",
+    "381-calendar-formatting",
 ]
 resolver = "2"
 [profile.release]
