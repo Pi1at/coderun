@@ -1,56 +1,59 @@
-#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 use std::{
     collections::HashMap,
     io::{self, BufRead, BufWriter, Write},
 };
-fn filter_over_bl(file: &str, blacklist: &[String]) -> Option<(String, String)> {
-    blacklist
-        .iter()
-        .find(|&bf| file.starts_with(bf))
-        .map(|_bf| {
-            let ext = file.rfind('.').unwrap();
-            (String::from(file), String::from(&file[ext..]))
-        })
+
+struct FileExt {
+    path: String,
+    extension: String,
 }
+
+impl<'a> From<&'a str> for FileExt {
+    fn from(value: &'a str) -> Self {
+        let p = value.to_string();
+        let ext = value.rfind('.').unwrap_or_default();
+        Self { path: p, extension: (&value[ext..]).into() }
+    }
+}
+struct Blacklist {
+    data: Vec<String>,
+}
+
+impl Blacklist {
+    fn new(mut data: Vec<String>) -> Self {
+        data.sort_unstable();
+        Self { data }
+    }
+    fn is_blacklisted(&self, file: &str) -> bool {
+        self.data.iter().any(|bf| file.starts_with(bf))
+    }
+}
+
 fn main() {
     let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
-    let mut line_iter = io::stdin().lock().lines().flatten();
-
+    let mut line_iter = io::stdin().lock().lines().map_while(Result::ok);
     let n = line_iter.next().unwrap().parse().unwrap();
-    let mut bl = vec![String::new(); n];
-
-    (0..bl.len()).for_each(|i| {
-        bl[i] = line_iter.next().unwrap();
-    });
-
-    let m = line_iter.next().unwrap().parse().unwrap();
-    let mut file = String::new();
-    let files = {
-        let mut files = Vec::with_capacity(m);
-
-        (0..m).for_each(|_idx| {
-            file = line_iter.next().unwrap();
-            if let Some((s1, s2)) = filter_over_bl(&file, &bl) {
-                files.push((s1, s2));
-            }
-        });
-        files
+    let bl = {
+        let b: Vec<_> = line_iter.by_ref().take(n).collect();
+        Blacklist::new(b)
     };
+    let m = line_iter.next().unwrap().parse().unwrap();
+    let files: Vec<FileExt> = line_iter
+        .by_ref()
+        .take(m)
+        .filter(|f| bl.is_blacklisted(f))
+        .map(|f| f.as_str().into())
+        .collect();
 
-    let q = line_iter.next().unwrap().parse().unwrap();
+    let _q = line_iter.next();
     let mut ext: HashMap<&str, usize> = HashMap::with_capacity(files.len());
-    for _ in 0..q {
-        let query = line_iter.next().unwrap(); //directory where delete file
-        files
-            .iter()
-            .filter(|(f, _)| f.starts_with(&query))
-            .for_each(|(_, e)| {
-                *ext.entry(e).or_default() += 1;
-            });
+    line_iter.for_each(|query| {
+        files.iter().filter(|f| f.path.starts_with(&query)).for_each(|f| {
+            ext.entry(&f.extension).and_modify(|count| *count += 1).or_insert(1);
+        });
         let _ = writeln!(out, "{}", ext.len());
         for (e, v) in ext.drain() {
             let _ = writeln!(out, "{e}: {v}");
         }
-    }
-    drop(line_iter);
+    });
 }
