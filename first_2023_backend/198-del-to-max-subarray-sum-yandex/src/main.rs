@@ -1,9 +1,7 @@
-// 198. Поиск
 use std::{
     fmt::{Debug, Display},
-    io::{self, BufRead},
+    io::{self, BufRead, BufWriter, Error, Write},
     ops::{Add, AddAssign},
-    println,
 };
 
 fn ka_c_rem_k<T>(a: &[T], k: usize) -> T
@@ -28,11 +26,11 @@ where
     // left sum removing up to k elements
     let mut ls = vec![vec![T::default(); k + 1]; n];
     // maximum subarray left sum after removing up to k elements
-    let mut lsm = vec![vec![T::default(); k + 1]; n];
+    let mut left_max = vec![vec![T::default(); k + 1]; n];
 
     // Compute maximum subarray right sum after removing up to k elements
     let mut rs = vec![vec![T::default(); k + 1]; n];
-    let mut rsm = vec![vec![T::default(); k + 1]; n];
+    let mut right_max = vec![vec![T::default(); k + 1]; n];
 
     for i in 0..n {
         for j in 0..=k {
@@ -44,10 +42,10 @@ where
                 ksm[i.c()][j] = a[i];
 
                 ls[i][j] = a[i];
-                lsm[i][j] = a[i].max(T::default());
+                left_max[i][j] = a[i].max(T::default());
 
                 rs[ri][j] = a[ri];
-                rsm[ri][j] = a[ri].max(T::default());
+                right_max[ri][j] = a[ri].max(T::default());
 
                 rs[ri][j] = a[ri];
 
@@ -57,10 +55,10 @@ where
 
                     // i == 0
                     ls[i][j] = a[i].max(ls[i][j - 1]).max(T::default());
-                    lsm[i][j] = a[i].max(T::default());
+                    left_max[i][j] = a[i].max(T::default());
 
                     rs[ri][j] = a[ri].max(rs[ri][j - 1]).max(T::default());
-                    rsm[ri][j] = a[ri].max(T::default());
+                    right_max[ri][j] = a[ri].max(T::default());
                 }
             } else if j == 0 {
                 // текущий элемент или сумма пред+тек
@@ -69,11 +67,11 @@ where
 
                 // + left element
                 ls[i][j] = ls[i - 1][j] + a[i];
-                lsm[i][j] = ls[i][j].max(lsm[i - 1][j]);
+                left_max[i][j] = ls[i][j].max(left_max[i - 1][j]);
 
                 // + right element
                 rs[ri][j] = rs[prev_ri][j] + a[ri];
-                rsm[ri][j] = rs[ri][j].max(rsm[prev_ri][j]);
+                right_max[ri][j] = rs[ri][j].max(right_max[prev_ri][j]);
             } else {
                 // макс без текущего элемента или с ним
                 ks[i.c()][j] = a[i].max(ks[i.p()][j - 1]).max(ks[i.p()][j] + a[i]);
@@ -81,14 +79,15 @@ where
 
                 // skip it or + left element
                 ls[i][j] = ls[i - 1][j - 1].max(ls[i - 1][j] + a[i]);
-                lsm[i][j] = lsm[i - 1][j].max(ls[i][j]);
+                left_max[i][j] = left_max[i - 1][j].max(ls[i][j]);
 
                 // skip it or + right element
                 rs[ri][j] = rs[prev_ri][j - 1].max(rs[prev_ri][j] + a[ri]);
-                rsm[ri][j] = rsm[prev_ri][j].max(rs[ri][j]);
+                right_max[ri][j] = right_max[prev_ri][j].max(rs[ri][j]);
             }
         }
     }
+
     let mut r = ksm[(n - 1).c()][k];
     if r < T::default() {
         return r;
@@ -99,25 +98,25 @@ where
     let mut la = vec![vec![T::default(); k + 1]; 2];
     let mut ra = vec![vec![T::default(); k + 1]; 2];
 
-    la[0][0] = ls[0][0] + rsm[1][0];
+    la[0][0] = ls[0][0] + right_max[1][0];
 
     for i in 1..(n - 1) {
         for j in 0..=k {
-            la[i.c()][j] = la[i.p()][j].max(ls[i][j] + rsm[i + 1][k - j]);
+            la[i.c()][j] = la[i.p()][j].max(ls[i][j] + right_max[i + 1][k - j]);
         }
     }
 
     for j in 0..=k {
-        ra[(n - 1).c()][j] = rs[n - 1][j] + lsm[n - 2][k - j];
+        ra[(n - 1).c()][j] = rs[n - 1][j] + left_max[n - 2][k - j];
     }
 
     for i in (1..(n - 1)).rev() {
-        ra[i.c()][0] = ra[i.n()][0].max(rs[i][0] + lsm[i - 1][0]);
+        ra[i.c()][0] = ra[i.n()][0].max(rs[i][0] + left_max[i - 1][0]);
     }
 
     for i in (1..(n - 1)).rev() {
         for j in 0..=k {
-            ra[i.c()][j] = ra[i.n()][j].max(rs[i][j] + lsm[i - 1][k - j]);
+            ra[i.c()][j] = ra[i.n()][j].max(rs[i][j] + left_max[i - 1][k - j]);
         }
     }
 
@@ -131,32 +130,22 @@ fn run_me(a: &[isize], k: usize) -> isize {
     ka_c_rem_k(a, k)
 }
 
-fn main() {
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
-    let num_tests = line_iter.next().unwrap().unwrap().parse::<usize>().unwrap();
+fn main() -> Result<(), Error> {
+    let mut out = BufWriter::new(std::io::stdout().lock());
+    let mut line_iter = io::stdin().lock().lines().map_while(Result::ok);
+    let num_tests = line_iter.next().unwrap().parse::<usize>().unwrap();
 
     for _ in 0..num_tests {
-        let nk = line_iter
-            .next()
-            .unwrap()
-            .unwrap()
-            .split_whitespace()
-            .flat_map(|s| s.parse::<usize>())
-            .collect::<Vec<_>>();
+        let k = line_iter.next().unwrap().split_whitespace().nth(1).unwrap().parse().unwrap();
 
-        let _n = nk[0];
-        let k = nk[1];
-        let ni = line_iter
-            .next()
-            .unwrap()
-            .unwrap()
-            .split_whitespace()
-            .flat_map(|s| s.parse::<isize>())
-            .collect::<Vec<_>>();
+        let ni =
+            line_iter.next().unwrap().split_whitespace().flat_map(str::parse).collect::<Box<_>>();
+
         let res = run_me(&ni, k);
-        println!("{:?}", res);
+        writeln!(out, "{res:?}")?;
     }
+    drop(line_iter);
+    Ok(())
 }
 
 trait BinaryIndex {
@@ -183,7 +172,6 @@ impl BinaryIndex for usize {
 mod test {
     use std::ops::Sub;
 
-
     use {super::*, rand::seq::SliceRandom, rand::Rng};
 
     fn kadane_linear_remove_k_sum<T>(a: &[T], k: usize) -> T
@@ -202,7 +190,7 @@ mod test {
             res = res.max(dp[i][0]);
             (1..=k).for_each(|j| {
                 dp[i][j] = T::default().max(dp[i - 1][j - 1]).max(a[i] + dp[i - 1][j]);
-                res = res.max(dp[i][j])
+                res = res.max(dp[i][j]);
             });
         });
 
@@ -242,7 +230,6 @@ mod test {
         assert_eq!(10, run_me(&a, 1));
     }
     #[test]
-
     fn test_3() {
         let a = vec![5, -5, 5, -5, 5, -5];
         assert_eq!(15, run_me(&a, 2));
@@ -386,6 +373,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn huge_random_array_exact_k_negative() {
         let max_n = 7000_usize;
         let min_n = 1_usize;
@@ -441,18 +429,11 @@ mod test {
                 y = y.max(cr);
             }
             if y == res {
-                s += 1
+                s += 1;
             } else {
                 //f += 1;
             };
-            assert_eq!(
-                y,
-                res,
-                "i = {} test {} got wrong with: k = {}",
-                i,
-                s + 1,
-                k / 2
-            );
+            assert_eq!(y, res, "i = {} test {} got wrong with: k = {}", i, s + 1, k / 2);
             a.clear();
         }
     }
