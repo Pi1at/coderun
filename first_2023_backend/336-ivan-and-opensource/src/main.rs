@@ -11,10 +11,12 @@ struct FileExt {
 
 impl<'a> From<&'a str> for FileExt {
     fn from(value: &'a str) -> Self {
-        let p = value.to_string();
         // there always a dot in the filename by task definition
-        let ext = value.rfind('.').unwrap_or_default();
-        Self { path: p, extension: (&value[ext..]).into() }
+        if let Some((p, ext)) = value.rsplit_once('.') {
+            Self { path: p.into(), extension: ext.into() }
+        } else {
+            unreachable!("File name must contain at least one dot")
+        }
     }
 }
 struct Blacklist {
@@ -30,6 +32,7 @@ impl Blacklist {
 
 impl From<Vec<String>> for Blacklist {
     fn from(mut value: Vec<String>) -> Self {
+        // TODO: already forgot why is there - refactor other parts or remove it
         value.sort_unstable();
         Self { data: value }
     }
@@ -44,7 +47,7 @@ fn main() {
     let files: Vec<FileExt> = lines
         .by_ref()
         .take(m)
-        // only in blacklisted files needed
+        // only need blacklisted files for future queries
         .filter(|f| bl.is_blacklisted(f))
         .map(|f| f.as_str().into())
         .collect();
