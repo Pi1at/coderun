@@ -21,9 +21,7 @@ fn run_me(arr: &[isize]) -> isize {
     result
 }
 fn main() {
-    let stdin = io::stdin();
-
-    let xi: Vec<isize> = stdin
+    let xi: Vec<isize> = io::stdin()
         .lock()
         .lines()
         .nth(1)
