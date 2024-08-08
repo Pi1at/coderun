@@ -34,7 +34,7 @@ impl From<String> for Calendar {
 
 impl Display for Calendar {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        // allocations UwU
+        // FIXME: allocations UwU
         let s = std::iter::repeat("..".to_string())
             .take(self.start_day)
             .chain((1..=self.n_days).map(|i| format!("{i:.>2}")))
