@@ -1,8 +1,4 @@
-use std::{
-    io::{self, BufRead},
-    iter::FromIterator,
-    println,
-};
+use std::io::{self, BufRead};
 
 fn find_div_nn(numbers: &[(usize, usize)], i: usize, k: usize, m: usize) -> Option<Vec<usize>> {
     let n = numbers.len();
@@ -13,14 +9,10 @@ fn find_div_nn(numbers: &[(usize, usize)], i: usize, k: usize, m: usize) -> Opti
     }
 
     if k == 0 {
-        if m == 1 {
-            return Some(Vec::<usize>::new());
-        }
-        return None;
+        return (m == 1).then_some(Vec::<usize>::new());
     }
 
     let mut cur_i = i;
-
     while (numbers[cur_i].1 > m) && (cur_i <= last_i) {
         cur_i += 1;
     }
@@ -28,11 +20,7 @@ fn find_div_nn(numbers: &[(usize, usize)], i: usize, k: usize, m: usize) -> Opti
     // at this point numbers[cur_i].1 <= m;
     // if we need find k one's in slice
     if m == 1 {
-        if cur_i <= last_i {
-            return Some((cur_i..cur_i + k).map(|idx| numbers[idx].0).collect());
-        } else {
-            return None;
-        }
+        return (cur_i <= last_i).then_some((cur_i..cur_i + k).map(|idx| numbers[idx].0).collect());
     }
     if numbers[cur_i].1 == 1 {
         return None;
@@ -55,34 +43,23 @@ fn find_k_eq_m(a: &[(usize, usize)], k: usize, m: usize) -> Vec<usize> {
 
     // m = 0, peek k-1 numbers and 0
     if m == 0 {
-        let mut b = a
-            .iter()
-            .filter(|(i, num)| (*i <= k) || *num == 0)
-            .collect::<Vec<_>>();
+        let mut b = a.iter().filter(|(i, num)| (*i <= k) || *num == 0).collect::<Vec<_>>();
         b.sort_unstable_by_key(|(_, num)| *num);
-        b.truncate(k);
-        return b.iter().map(|(idx, _)| idx + 1).collect::<Vec<_>>();
+        return b.iter().take(k).map(|(idx, _)| idx + 1).collect::<Vec<_>>();
     }
 
     // m > 0, lets filter out some obv and sort in descend order
 
-    let mut b = Vec::from_iter(a.iter().filter_map(
-        |&(idx, num)| {
-            if num <= m {
-                Some((idx, num))
-            } else {
-                None
-            }
-        },
-    ));
+    let mut b = a
+        .iter()
+        .filter_map(|&(idx, num)| if num <= m { Some((idx, num)) } else { None })
+        .collect::<Vec<(_, _)>>();
 
     b.sort_unstable_by_key(|&(_, num)| std::cmp::Reverse(num));
 
     let ans = find_div_nn(&b, 0, k, m);
 
-    ans.map_or_else(Vec::new, |x| {
-        x.iter().map(|&idx| (idx + 1)).collect::<Vec<_>>()
-    })
+    ans.map_or_else(Vec::new, |x| x.iter().map(|&idx| (idx + 1)).collect::<Vec<_>>())
 }
 
 fn main() {
@@ -94,35 +71,34 @@ fn main() {
         .unwrap()
         .split_whitespace()
         .skip(1)
-        .flat_map(|s| s.parse::<usize>())
+        .flat_map(str::parse)
         .collect::<Vec<_>>();
     let a = line_iter
         .next()
         .unwrap()
         .unwrap()
         .split_whitespace()
-        .flat_map(|s| s.parse::<usize>())
+        .flat_map(str::parse)
         .enumerate()
         .collect::<Vec<_>>();
-
+    drop(line_iter);
     let res = (find_k_eq_m(&a, mk[1], mk[0]))
         .iter()
-        .map(|&idx| (idx).to_string())
+        .map(|&idx| idx.to_string())
         .collect::<Vec<_>>()
         .join(" ");
 
-    println!("{}", res);
+    println!("{res}");
 }
 
 #[cfg(test)]
 mod test {
-    use core::panic;
 
     use super::*;
     use rand::{seq::SliceRandom, Rng};
 
-    
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn random_array() {
         let max_m = 10_usize.pow(9);
         let min_m = 1_usize;
@@ -156,63 +132,30 @@ mod test {
                 m = a.iter().fold(1, |acc, &x| acc.saturating_mul(x));
                 if (m <= max_m) && (m >= min_m) {
                     break;
-                } else {
-                    a.drain(..);
                 }
+                a.clear();
             }
             println!("--------------------");
             //print!("множители {:?}", a);
             for _x in 0..(n - a.len()) {
-                a.push(rng.gen_range(min_m..=300))
+                a.push(rng.gen_range(min_m..=300));
             }
             a.shuffle(&mut rng);
 
-            //println!("{:?}", factorize_all(&a));
-
-            //prime_factors(m);
             println!();
-            let b = a
-                .iter()
-                .enumerate()
-                .map(|(k, &v)| (k, v))
-                .collect::<Vec<_>>();
+            let b = a.iter().enumerate().map(|(k, &v)| (k, v)).collect::<Vec<_>>();
 
-            //println!("{:?}", a);
-            //println!("{:?}", b);
             println!("N = {n} K = {k}");
             print!("FIND {m} =");
             let before = std::time::Instant::now();
             let ans = find_k_eq_m(&b, k, m);
             let d = before.elapsed();
             println!("Elapsed time: {:.2?}", before.elapsed());
-            if d.as_secs() >= 1 {
-                panic!()
-            };
-            //println!("ANSWER {:?}", ans);
-            let res = if !ans.is_empty() {
-                ans.iter().fold(1, |acc, idx| acc * a[idx - 1])
-            } else {
-                //println! {"NOT FOUND!"};
-                // let c = Vec::from_iter(b.iter().map(|(k, v)| *v));
-                // println!("{:?}", c);
-                0
-            };
-            println!("res {:?}", res);
-            // let res = ans.map_or_else(
-            //     || 0,
-            //     |v| {
-            //         v.iter()
-            //             .map(|i| {
-            //                 print!("{:} ", a[*i]);
-            //                 a[*i] as u128
-            //             })
-            //             .product()
-            //     },
-            // );
+            assert!(d.as_secs() < 1, "TL");
 
-            // if res != m {
-            //     break;
-            // };
+            let res =
+                if ans.is_empty() { 0 } else { ans.iter().fold(1, |acc, idx| acc * a[idx - 1]) };
+            println!("res {res:?}");
             assert_eq!(res, m);
         }
     }

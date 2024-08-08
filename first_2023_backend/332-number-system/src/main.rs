@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     io::{self, BufRead},
-    iter::FromIterator,
 };
 
 fn horners_method(coefficients: &[i32], x: i32) -> i32 {
@@ -15,7 +14,7 @@ fn horners_method(coefficients: &[i32], x: i32) -> i32 {
 
 fn modify_number(sign: i32, number: &mut Vec<i32>, powers: &mut HashMap<u32, i32>) {
     for (pos, e) in number.drain(..).enumerate() {
-        *powers.entry(pos as u32).or_insert(0) += e * sign;
+        *powers.entry(pos as u32).or_default() += e * sign;
     }
 }
 // Who needs lexers
@@ -47,14 +46,10 @@ fn run_me(input: &str) -> i32 {
     }
     modify_number(sign, &mut number, &mut powers);
 
-    let mut prepare = powers.iter().collect::<Vec<_>>();
+    let mut prepare = powers.into_iter().collect::<Vec<_>>();
     prepare.sort_by_key(|el| el.0);
-    let coeff = Vec::from_iter(
-        prepare
-            .iter()
-            .skip_while(|(_, v)| **v == 0)
-            .map(|(_, v)| **v),
-    );
+    let coeff =
+        prepare.into_iter().skip_while(|(_, v)| *v == 0).map(|(_, v)| v).collect::<Vec<_>>();
 
     match coeff.first() {
         Some(&x) => (min_base..=x.abs())
@@ -65,10 +60,9 @@ fn run_me(input: &str) -> i32 {
 }
 
 fn main() {
-    let stdin = io::stdin();
-    let input = stdin.lock().lines().next().unwrap().unwrap();
+    let input = io::stdin().lock().lines().next().unwrap().unwrap();
     let result = run_me(&input);
-    println!("{}", result);
+    println!("{result}");
 }
 
 #[cfg(test)]

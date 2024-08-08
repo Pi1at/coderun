@@ -7,11 +7,19 @@ name = "a-1-find-most-frequent"
 version = "0.1.0"
 
 [[package]]
+name = "area-between-curves"
+version = "0.1.0"
+
+[[package]]
 name = "buses-ya-intern"
 version = "0.1.0"
 dependencies = [
  "rand",
 ]
+
+[[package]]
+name = "calendar-formatting"
+version = "0.1.0"
 
 [[package]]
 name = "cfg-if"
@@ -22,6 +30,16 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "checkers"
 version = "0.1.0"
+
+[[package]]
+name = "coz"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cef55b3fe2f5477d59e12bc792e8b3c95a25bd099eadcfae006ecea136de76e2"
+dependencies = [
+ "libc",
+ "once_cell",
+]
 
 [[package]]
 name = "dayofweek-ya-intern"
@@ -42,7 +60,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "diversity-improvement"
+version = "0.1.0"
+
+[[package]]
+name = "diversity-scoring"
+version = "0.1.0"
+
+[[package]]
 name = "exactly-one-occur"
+version = "0.1.0"
+
+[[package]]
+name = "find-rle-string-length"
 version = "0.1.0"
 
 [[package]]
@@ -82,6 +112,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "meetings"
+version = "0.1.0"
+
+[[package]]
+name = "mobilization"
+version = "0.1.0"
+
+[[package]]
+name = "mtf-encoding-decoding"
+version = "0.1.0"
+dependencies = [
+ "coz",
+ "rand",
+]
+
+[[package]]
 name = "number-system"
 version = "0.1.0"
 dependencies = [
@@ -89,7 +135,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "once_cell"
+version = "1.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
+
+[[package]]
 name = "pairwise-xor"
+version = "0.1.0"
+
+[[package]]
+name = "phone-formatting"
+version = "0.1.0"
+
+[[package]]
+name = "plane-boarding"
 version = "0.1.0"
 
 [[package]]
@@ -164,6 +224,10 @@ version = "0.1.0"
 
 [[package]]
 name = "trading-ya-intern"
+version = "0.1.0"
+
+[[package]]
+name = "two-cliques"
 version = "0.1.0"
 
 [[package]]

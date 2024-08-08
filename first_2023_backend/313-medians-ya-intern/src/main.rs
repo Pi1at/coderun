@@ -1,4 +1,3 @@
-// 313. Сумма медиан
 use std::{
     io::{self, BufRead},
     println,
@@ -21,19 +20,16 @@ fn run_me(arr: &[isize]) -> isize {
     }
     result
 }
-
 fn main() {
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
-    let _n = line_iter.next().unwrap().unwrap().parse::<usize>().unwrap();
-
-    let xi = line_iter
-        .next()
+    let xi: Vec<isize> = io::stdin()
+        .lock()
+        .lines()
+        .nth(1)
         .unwrap()
         .unwrap()
         .split_whitespace()
-        .flat_map(|s| s.parse::<isize>())
-        .collect::<Vec<_>>();
+        .flat_map(str::parse)
+        .collect();
     println!("{}", run_me(&xi));
 }
 

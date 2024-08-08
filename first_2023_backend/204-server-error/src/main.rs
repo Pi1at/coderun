@@ -1,25 +1,20 @@
-use std::{
-    io::{self, BufRead},
-    println,
-};
+use std::io::{self, BufRead};
 
 fn main() {
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
-    let serv_count: usize = line_iter.next().unwrap().unwrap().parse().unwrap();
-    let mut server_prob: Vec<f64> = vec![0_f64; serv_count];
+    let mut all_servers = 0_f64;
+    let server_prob: Vec<f64> = io::stdin()
+        .lock()
+        .lines()
+        .skip(1)
+        .flatten()
+        .map(|s| {
+            let sp = s.split_whitespace().flat_map(str::parse::<f64>).product();
+            all_servers += sp;
+            sp
+        })
+        .collect();
 
-    for serv in server_prob.iter_mut().take(serv_count) {
-        *serv = line_iter
-            .next()
-            .unwrap()
-            .unwrap()
-            .split_whitespace()
-            .map(|x| x.parse::<f64>().unwrap())
-            .product::<f64>();
-    }
-    let s: f64 = server_prob.iter().sum();
     for serv in server_prob {
-        println!("{:.12}", serv / s)
+        println!("{:.12}", serv / all_servers);
     }
 }

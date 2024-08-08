@@ -1,30 +1,24 @@
-use std::{
-    io::{self, BufRead},
-    println,
-};
+use std::io::{self, BufRead};
 
 fn main() {
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
-    let num_tests: usize = line_iter.next().unwrap().unwrap().parse().unwrap();
+    let mut line_iter = io::stdin().lock().lines().map_while(Result::ok);
+    let num_tests: usize = line_iter.next().unwrap().parse().unwrap();
 
     for _ in 0..num_tests {
-        let _num_chairs: usize = line_iter.next().unwrap().unwrap().parse().unwrap();
+        let _num_chairs: usize = line_iter.next().unwrap().parse().unwrap();
 
         let chairs = {
             let mut chairs = line_iter
                 .next()
                 .unwrap()
-                .unwrap()
                 .split_whitespace()
-                .map(|x| x.parse::<usize>().unwrap())
-                .collect::<Vec<_>>();
+                .flat_map(str::parse)
+                .collect::<Vec<usize>>();
             chairs.sort_unstable();
             chairs
         };
-
-        let m = chairs.windows(2).map(|z| z[0] ^ z[1]).min().unwrap();
-
-        println!("{}", m);
+        let min_diff = chairs.windows(2).map(|z| z[0] ^ z[1]).min().unwrap();
+        println!("{min_diff}");
     }
+    drop(line_iter);
 }

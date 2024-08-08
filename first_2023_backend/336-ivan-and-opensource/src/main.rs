@@ -1,53 +1,66 @@
 use std::{
     collections::HashMap,
     io::{self, BufRead, BufWriter, Write},
-    writeln,
 };
 
-fn filter_over_bl(file: &str, bl: &[String]) -> Option<(String, String)> {
-    for bf in bl.iter() {
-        if file.starts_with(bf) {
-            let ext = file.rfind('.').unwrap();
-            return Some((file.to_string(), file[ext..].to_string()));
+// TODO: maybe implement as &str variant or change back implementation to  String
+struct FileExt {
+    path: String,
+    extension: String,
+}
+
+impl<'a> From<&'a str> for FileExt {
+    fn from(value: &'a str) -> Self {
+        // there always a dot in the filename by task definition
+        if let Some((p, ext)) = value.rsplit_once('.') {
+            Self { path: p.into(), extension: ext.into() }
+        } else {
+            unreachable!("File name must contain at least one dot")
         }
     }
-    None
 }
+struct Blacklist {
+    data: Vec<String>,
+}
+
+impl Blacklist {
+    fn is_blacklisted(&self, file: &str) -> bool {
+        // TODO: probably there is better way to implement this
+        self.data.iter().any(|bf| file.starts_with(bf))
+    }
+}
+
+impl From<Vec<String>> for Blacklist {
+    fn from(mut value: Vec<String>) -> Self {
+        // TODO: already forgot why is there - refactor other parts or remove it
+        value.sort_unstable();
+        Self { data: value }
+    }
+}
+
 fn main() {
     let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
-    let mut line_iter = io::stdin().lock().lines().flatten();
+    let mut lines = io::stdin().lock().lines().map_while(Result::ok);
+    let n = lines.next().unwrap().parse().unwrap();
+    let bl: Blacklist = lines.by_ref().take(n).collect::<Vec<_>>().into();
+    let m = lines.next().unwrap().parse().unwrap();
+    let files: Vec<FileExt> = lines
+        .by_ref()
+        .take(m)
+        // only need blacklisted files for future queries
+        .filter(|f| bl.is_blacklisted(f))
+        .map(|f| f.as_str().into())
+        .collect();
 
-    let n = line_iter.next().unwrap().parse().unwrap();
-    let mut bl = vec![String::new(); n];
-
-    (0..bl.len()).for_each(|i| {
-        bl[i] = line_iter.next().unwrap();
-    });
-
-    let m = line_iter.next().unwrap().parse().unwrap();
-    let mut files = Vec::with_capacity(m);
-
-    (0..m).for_each(|_idx| {
-        let file = line_iter.next().unwrap();
-        if let Some(v) = filter_over_bl(&file, &bl) {
-            files.push(v);
-        }
-    });
-
-    let q = line_iter.next().unwrap().parse().unwrap();
-    (0..q).for_each(|_i| {
-        let query = line_iter.next().unwrap(); //directory where delete file
-        let mut ext = HashMap::new();
-
-        for (file, e) in files.clone() {
-            if file.starts_with(&query) {
-                *ext.entry(e).or_insert(0) += 1;
-            }
-        }
-
+    let _q = lines.next();
+    let mut ext: HashMap<&str, usize> = HashMap::with_capacity(files.len());
+    lines.for_each(|query| {
+        files.iter().filter(|f| f.path.starts_with(&query)).for_each(|f| {
+            ext.entry(&f.extension).and_modify(|count| *count += 1).or_insert(1);
+        });
         let _ = writeln!(out, "{}", ext.len());
         for (e, v) in ext.drain() {
             let _ = writeln!(out, "{e}: {v}");
         }
-    })
+    });
 }
