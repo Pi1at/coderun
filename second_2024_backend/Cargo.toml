@@ -1,0 +1,19 @@
+[workspace]
+members = [
+    "3134-phi-backend",
+]
+resolver = "2"
+[profile.release]
+debug = 1
+[workspace.lints.clippy]
+#cargo       = "warn"
+all         = "warn"
+complexity  = "warn"
+correctness = "deny"
+nursery     = "warn"
+pedantic    = "warn"
+perf        = "deny"
+style       = "warn"
+suspicious  = "warn"
+
+cast_possible_truncation = "warn"
