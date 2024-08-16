@@ -14,6 +14,7 @@ members = [
     "423-nearest-bus-stop",
     "422-two-teams",
     "424-lucky-number",
+    "426-fair-division",
 ]
 
 resolver = "2"
