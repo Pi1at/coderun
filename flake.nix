@@ -39,6 +39,11 @@
       {
         devShells.default = pkgs.mkShell {
           inherit buildInputs nativeBuildInputs;
+          # example of shellHook
+          # shellHook = ''
+          #   export PATH=$PATH:''${CARGO_HOME:-~/.cargo}/bin
+          #   cargo install cargo-snippet --features="binaries"
+          # '';
         };
       }
     );
