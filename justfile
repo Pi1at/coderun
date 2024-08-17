@@ -5,7 +5,7 @@ default:
     @just --list
 
 new number name season=s2:
-    cargo new {{justfile_directory()}}/{{season}}/{{number}}-{{name}} --name {{name}}
+    cargo new {{justfile_directory()}}/{{season}}/{{number}}-{{name}} --name {{name}} && touch {{justfile_directory()}}/{{season}}/{{number}}-{{name}}/README.md
 
 
 
