@@ -5,6 +5,7 @@ members = [
     "449-combo",
     "445-tiles",
     "444-tic-tac-toe",
+    "441-tableau",
 ]
 
 resolver = "2"
