@@ -1,5 +1,9 @@
 [workspace]
-members = ["3134-phi-backend"]
+
+members = [
+    "3134-phi-backend",
+    "449-combo",
+]
 
 resolver = "2"
 
