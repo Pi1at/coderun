@@ -1,20 +1,17 @@
-use std::{
-    cmp::Reverse,
-    io::{self, BufRead},
-};
+use core::cmp::Reverse;
+use std::io::{self, BufRead};
 
 fn main() {
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines().map_while(Result::ok);
-    let n_or_m = line_iter.next().unwrap().split_whitespace().flat_map(str::parse).min().unwrap();
+    let mut lines = io::stdin().lock().lines().map_while(Result::ok);
+    let n_or_m = lines.next().unwrap().split_whitespace().flat_map(str::parse).min().unwrap();
 
     let mut sellers =
-        line_iter.next().unwrap().split_whitespace().flat_map(str::parse).collect::<Vec<usize>>();
+        lines.next().unwrap().split_whitespace().flat_map(str::parse).collect::<Vec<usize>>();
     sellers.sort_unstable();
 
     let mut buyers =
-        line_iter.next().unwrap().split_whitespace().flat_map(str::parse).collect::<Vec<usize>>();
-    drop(line_iter);
+        lines.next().unwrap().split_whitespace().flat_map(str::parse).collect::<Vec<usize>>();
+    drop(lines);
     buyers.sort_unstable_by_key(|&k| Reverse(k));
 
     let res: usize =

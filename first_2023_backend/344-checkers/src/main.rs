@@ -20,7 +20,7 @@ impl Field {
     /// [`Empty`]: Field::Empty
     #[must_use]
     const fn is_empty(&self) -> bool {
-        matches!(self, Self::Empty)
+        matches!(self, &Self::Empty)
     }
 }
 
@@ -36,35 +36,35 @@ impl FromStr for Field {
 }
 
 fn main() {
+    let mut lines = io::stdin().lock().lines().map_while(Result::ok);
+
     let mut checkers: HashMap<(isize, isize), Field> = HashMap::new();
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines().map_while(Result::ok);
     let must_be_inverse: Vec<(isize, isize)> = vec![(-1, -1), (1, 1), (-1, 1), (1, -1)];
     let must_be_empty: Vec<(isize, isize)> = vec![(-2, -2), (2, 2), (-2, 2), (2, -2)];
 
-    let nm = line_iter.next().unwrap().split_whitespace().flat_map(str::parse).collect::<Vec<_>>();
-    let num_whites = line_iter.next().unwrap().parse().unwrap();
-    let whites = line_iter.by_ref().take(num_whites).map(|s| {
+    let nm = lines.next().unwrap().split_whitespace().flat_map(str::parse).collect::<Vec<_>>();
+    let num_whites = lines.next().unwrap().parse().unwrap();
+    let whites = lines.by_ref().take(num_whites).map(|s| {
         let mut inner = s.split_ascii_whitespace().flat_map(str::parse);
         (inner.next().unwrap(), inner.next().unwrap())
     });
     checkers.extend(whites.zip(iter::repeat(Field::White)));
-    let num_blacks = line_iter.next().unwrap().parse().unwrap();
-    let blacks = line_iter.by_ref().take(num_blacks).map(|s| {
+    let num_blacks = lines.next().unwrap().parse().unwrap();
+    let blacks = lines.by_ref().take(num_blacks).map(|s| {
         let mut inner = s.split_ascii_whitespace().flat_map(str::parse);
         (inner.next().unwrap(), inner.next().unwrap())
     });
     checkers.extend(blacks.zip(iter::repeat(Field::Black)));
-    let turn = line_iter.next().unwrap().parse().unwrap();
-    drop(line_iter);
+    let turn = lines.next().unwrap().parse().unwrap();
+    drop(lines);
 
     let is_valid_coord = |(i, j)| i <= nm[0] && i > 0 && j <= nm[1] && j > 0;
     let res = checkers
         .iter()
         //интересуют только фишки нашего цвета
-        .filter(|((_, _), color)| **color == turn)
+        .filter(|&(&(_, _), color)| *color == turn)
         //выход после первой подошедшей
-        .any(|((i, j), _)| {
+        .any(|(&(i, j), _)| {
             (0..must_be_inverse.len())
                 .map(|pos| {
                     (
@@ -72,7 +72,7 @@ fn main() {
                         (must_be_inverse[pos].0 + i, must_be_inverse[pos].1 + j),
                     )
                 })
-                .filter(|(e, inv)| (is_valid_coord(*e) && is_valid_coord(*inv)))
+                .filter(|&(e, inv)| (is_valid_coord(e) && is_valid_coord(inv)))
                 .any(|(e, inv)| match checkers.get(&e) {
                     Some(field) if (!field.is_empty()) => false,
                     Some(_) | None => match checkers.get(&inv) {

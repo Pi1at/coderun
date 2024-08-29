@@ -3,8 +3,11 @@ use std::io::{self, BufRead, BufWriter, Write};
 use crate::treap_list::TreapList;
 
 pub mod xor_shift_rng {
-    use std::collections::hash_map::RandomState;
-    use std::hash::{BuildHasher, Hasher};
+    use std::{
+        collections::hash_map::RandomState,
+        hash::{BuildHasher, Hasher},
+        iter::repeat_with,
+    };
 
     pub struct XorShiftRng {
         state: u32,
@@ -37,7 +40,7 @@ pub mod xor_shift_rng {
         /// Returns an iterator that generates pseudorandom numbers using the Xorshift algorithm.
         pub fn rng(self) -> impl Iterator<Item = u32> {
             let mut random = self.state;
-            std::iter::repeat_with(move || {
+            repeat_with(move || {
                 random ^= random << 13;
                 random ^= random >> 17;
                 random ^= random << 5;
@@ -221,6 +224,9 @@ pub mod implicit_treap {
         pub const fn len(&self) -> usize {
             self.len
         }
+        pub const fn is_empty(&self) -> bool {
+            self.len == 0
+        }
 
         pub fn update(&mut self) {
             let Self { ref mut len, ref left, ref right, .. } = self;
@@ -351,7 +357,7 @@ pub mod treap_list {
         }
 
         /// Return index of a value in the list.
-        pub fn index_of(&mut self, v: &T) -> Option<usize> {
+        pub fn index_of(&self, v: &T) -> Option<usize> {
             match implicit_treap::index_of(&self.tree, v) {
                 0 => None,
                 idx => Some(idx - 1),
@@ -376,15 +382,17 @@ fn run_me(input: &str, m: usize, decrypt: bool) -> Box<dyn Iterator<Item = usize
     let it = input.split_whitespace().flat_map(str::parse::<usize>).map(|x| x - 1);
     if decrypt {
         let ids: Vec<usize> = (0..m).collect();
-        let mut tr = TreapList::from(&ids[..]);
+        let mut tr = TreapList::from(ids.as_slice());
         Box::new(it.map(move |cur| {
             let c = tr.remove(cur);
             tr.push_front(c);
             c + 1
         }))
     } else {
+        #[allow(clippy::cast_possible_wrap)]
+        #[allow(clippy::cast_possible_truncation)]
         let mut ids: Vec<i32> = (0..m as i32).collect();
-        let mut tr = TreapList::from(&ids[..]);
+        let mut tr = TreapList::from(ids.as_slice());
         let mut min_id = 0;
         Box::new(it.map(move |cur| {
             let id = ids[cur];
@@ -445,11 +453,11 @@ mod tests {
     fn big_n_m() {
         let mut rng = rand::thread_rng();
         // length
-        let max_n = 300_000usize;
-        let min_n = 300_000usize;
+        let max_n = 300_000_usize;
+        let min_n = 300_000_usize;
         // max value
-        let max_m = 300_000usize;
-        let min_m = 300_000usize;
+        let max_m = 300_000_usize;
+        let min_m = 300_000_usize;
 
         for _ in 0..10 {
             let n = rng.gen_range(min_n..=max_n);
@@ -457,26 +465,26 @@ mod tests {
 
             println!("len: {n:<10} max: {m:<10}");
 
-            let before = std::time::Instant::now();
+            //let before = Instant::now();
             println!("building string");
             let orig = (0..n)
                 .map(|_| rng.gen_range(1..=m))
                 .map(|x| x.to_string())
                 .collect::<Vec<_>>()
                 .join(" ");
-            dbg!(before.elapsed());
-            let before = std::time::Instant::now();
+            //before.elapsed();
+            //let before = Instant::now();
             let encrypted = run_me(&orig, m, false);
-            dbg!(before.elapsed());
-            let before = std::time::Instant::now();
+            //before.elapsed();
+            //let before = Instant::now();
             let encrypted = encrypted.map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
-            dbg!(before.elapsed());
-            let before = std::time::Instant::now();
+            //before.elapsed();
+            //let before = Instant::now();
             let decrypted = run_me(&encrypted, m, true);
-            dbg!(before.elapsed());
-            let before = std::time::Instant::now();
+            //before.elapsed();
+            //let before = Instant::now();
             let decrypted = decrypted.map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
-            dbg!(before.elapsed());
+            //before.elapsed();
             assert_eq!(orig, decrypted);
         }
     }

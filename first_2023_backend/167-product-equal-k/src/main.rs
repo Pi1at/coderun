@@ -1,4 +1,7 @@
-use std::io::{self, BufRead};
+use std::{
+    cmp,
+    io::{self, BufRead},
+};
 
 fn find_div_nn(numbers: &[(usize, usize)], i: usize, k: usize, m: usize) -> Option<Vec<usize>> {
     let n = numbers.len();
@@ -43,19 +46,19 @@ fn find_k_eq_m(a: &[(usize, usize)], k: usize, m: usize) -> Vec<usize> {
 
     // m = 0, peek k-1 numbers and 0
     if m == 0 {
-        let mut b = a.iter().filter(|(i, num)| (*i <= k) || *num == 0).collect::<Vec<_>>();
-        b.sort_unstable_by_key(|(_, num)| *num);
-        return b.iter().take(k).map(|(idx, _)| idx + 1).collect::<Vec<_>>();
+        let mut b = a.iter().filter(|&&(i, num)| (i <= k) || num == 0).collect::<Vec<_>>();
+        b.sort_unstable_by_key(|&&(_, num)| num);
+        return b.iter().take(k).map(|&&(idx, _)| idx + 1).collect::<Vec<_>>();
     }
 
     // m > 0, lets filter out some obv and sort in descend order
 
     let mut b = a
         .iter()
-        .filter_map(|&(idx, num)| if num <= m { Some((idx, num)) } else { None })
+        .filter_map(|&(idx, num)| (num <= m).then_some((idx, num)))
         .collect::<Vec<(_, _)>>();
 
-    b.sort_unstable_by_key(|&(_, num)| std::cmp::Reverse(num));
+    b.sort_unstable_by_key(|&(_, num)| cmp::Reverse(num));
 
     let ans = find_div_nn(&b, 0, k, m);
 
@@ -93,6 +96,8 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+
+    use std::time;
 
     use super::*;
     use rand::{seq::SliceRandom, Rng};
@@ -143,11 +148,11 @@ mod test {
             a.shuffle(&mut rng);
 
             println!();
-            let b = a.iter().enumerate().map(|(k, &v)| (k, v)).collect::<Vec<_>>();
+            let b = a.iter().copied().enumerate().collect::<Vec<_>>();
 
             println!("N = {n} K = {k}");
             print!("FIND {m} =");
-            let before = std::time::Instant::now();
+            let before = time::Instant::now();
             let ans = find_k_eq_m(&b, k, m);
             let d = before.elapsed();
             println!("Elapsed time: {:.2?}", before.elapsed());

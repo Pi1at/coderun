@@ -1,6 +1,10 @@
-use std::fmt::{self, Display, Formatter};
-use std::io::BufRead;
-use std::io::{self, BufWriter, Write};
+use std::{
+    fmt::{self, Display, Formatter},
+    io::{self, BufRead, BufWriter, Write},
+    iter,
+};
+
+// TODO: simplify solution
 
 fn from_weekday(s: &str) -> usize {
     match s {
@@ -22,6 +26,7 @@ struct Calendar {
     start_day: usize,
 }
 
+#[allow(clippy::fallible_impl_from)]
 impl From<String> for Calendar {
     fn from(value: String) -> Self {
         let mut s = value.split_whitespace();
@@ -35,7 +40,7 @@ impl From<String> for Calendar {
 impl Display for Calendar {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         // FIXME: allocations UwU
-        let s = std::iter::repeat("..".to_string())
+        let s = iter::repeat("..".to_owned())
             .take(self.start_day)
             .chain((1..=self.n_days).map(|i| format!("{i:.>2}")))
             .collect::<Vec<_>>()
@@ -50,8 +55,8 @@ impl Display for Calendar {
 
 fn main() {
     let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
-    let mut line_iter = io::stdin().lock().lines().map_while(Result::ok);
-    let c: Calendar = line_iter.next().unwrap().into();
-    drop(line_iter);
+    let mut lines = io::stdin().lock().lines().map_while(Result::ok);
+    let c: Calendar = lines.next().unwrap().into();
+    drop(lines);
     _ = writeln!(out, "{c}");
 }
