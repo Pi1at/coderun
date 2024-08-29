@@ -26,6 +26,7 @@ const fn mod_mul(a: u64, b: u64) -> u64 {
 // shifts v on k elements in 'a..=z'
 // so if v = b'a' and k= b'z' we got -25 + 26 = 1
 const fn rotate_byte(v: u8, k: u8) -> u64 {
+    #![allow(clippy::cast_sign_loss)]
     let c = v as isize - k as isize;
     if c < 0 {
         (c + 26) as u64

@@ -51,16 +51,14 @@ fn get_intersect_area(cx: f64, cy: f64, r: f64) -> f64 {
         return 1.0;
     };
     let ab = [(1.0 - cx, cy), (1.0 - cy, 1.0 - cx), (cx, 1.0 - cy), (cy, cx)];
-    ab.iter().map(|(a, b)| get_circle_line_area(*a, *b, r)).sum()
+    ab.iter().map(|&(a, b)| get_circle_line_area(a, b, r)).sum()
 }
 
 #[cfg(test)]
 mod test {
+
     use super::*;
-    #[allow(unused_imports)]
-    use core::panic;
-    #[allow(unused_imports)]
-    use rand::{seq::SliceRandom, Rng};
+    use rand::Rng;
 
     #[test]
     fn random_dot() {

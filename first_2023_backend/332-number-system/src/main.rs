@@ -4,17 +4,18 @@ use std::{
 };
 
 fn horners_method(coefficients: &[i32], x: i32) -> i32 {
-    let degree = coefficients.len() - 1;
-    let mut result = coefficients[degree];
-    for i in (0..degree).rev() {
-        result = result * x + coefficients[i];
+    // assert!(coefficients.len() > 0);
+    //coefficients.iter().copied().rev().reduce(|acc, v| acc * x + v).unwrap()
+    let mut result = *coefficients.last().unwrap();
+    for c in coefficients.iter().rev().skip(1) {
+        result = result * x + c;
     }
     result
 }
 
 fn modify_number(sign: i32, number: &mut Vec<i32>, powers: &mut HashMap<u32, i32>) {
-    for (pos, e) in number.drain(..).enumerate() {
-        *powers.entry(pos as u32).or_default() += e * sign;
+    for (pos, e) in (0_u32..).zip(number.drain(..)) {
+        *powers.entry(pos).or_default() += e * sign;
     }
 }
 // Who needs lexers
@@ -27,6 +28,7 @@ fn run_me(input: &str) -> i32 {
     for index in input.chars().rev() {
         match index {
             'A'..='Z' | '0'..='9' => {
+                #[allow(clippy::cast_possible_wrap)]
                 let i: i32 = index.to_digit(36).unwrap() as i32;
                 min_base = min_base.max(i + 1);
                 number.push(i);

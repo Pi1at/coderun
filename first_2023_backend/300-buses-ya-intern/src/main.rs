@@ -33,6 +33,7 @@ fn multiply_t(t: &[isize]) -> Vec<isize> {
 }
 
 fn power_up(p: &[isize]) -> (Vec<isize>, isize) {
+    #![allow(clippy::cast_possible_wrap)]
     // for each p[i]*x^i
     // z[i+1] = p[i]*(p/i+1)
     // q[i+1] =
