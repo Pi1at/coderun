@@ -1,26 +1,13 @@
 use std::{
     collections::{hash_map::Entry, HashMap},
-    env,
-    fs::File,
-    io::{self, BufRead, BufReader, BufWriter, Write},
-    path::PathBuf,
+    io::{self, BufWriter, Write},
 };
+
+use lib::read_input;
 
 // TODO: refactor this mess
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let local_mode = env::var("CODERUN_LOCAL").is_ok_and(|m| m == "true");
-    let mut lines = {
-        let path = {
-            let mut path = PathBuf::new();
-            if local_mode {
-                path.push(env::var("CARGO_MANIFEST_DIR")?);
-            }
-            path.push("input.txt");
-            path
-        };
-        let file = File::open(path)?;
-        BufReader::new(file).lines().map_while(Result::ok)
-    };
+    let mut lines = read_input()?;
     let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
     let store_item_cnt = lines.next().unwrap().parse()?;
     let item_costs = lines
@@ -88,7 +75,14 @@ mod tests {
 
 // region: --- Lib
 pub mod lib {
-    use std::{fmt::Display, str::FromStr};
+    use std::{
+        env,
+        fmt::Display,
+        fs::File,
+        io::{BufRead, BufReader},
+        path::PathBuf,
+        str::FromStr,
+    };
 
     pub fn read_pair<T1, T2>(s: &str) -> (T1, T2)
     where
@@ -100,6 +94,21 @@ pub mod lib {
             (Some(Ok(first)), Some(Ok(snd))) => (first, snd),
             _ => unreachable!("input is malformed!"),
         }
+    }
+
+    #[allow(clippy::missing_errors_doc)]
+    pub fn read_input() -> Result<impl Iterator<Item = String>, Box<dyn std::error::Error>> {
+        let local_mode = env::var("CODERUN_LOCAL").is_ok_and(|m| m == "true");
+        let path = {
+            let mut path = PathBuf::new();
+            if local_mode {
+                path.push(env::var("CARGO_MANIFEST_DIR")?);
+            }
+            path.push("input.txt");
+            path
+        };
+        let file = File::open(path)?;
+        Ok(BufReader::new(file).lines().map_while(Result::ok))
     }
 
     pub fn join_into_string<T>(a: &[T]) -> String
