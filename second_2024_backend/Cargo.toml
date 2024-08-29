@@ -7,6 +7,7 @@ members = [
     "444-tic-tac-toe",
     "441-tableau",
     "440-queen-amount",
+    "439-couple-of-letters",
 ]
 
 resolver = "2"
