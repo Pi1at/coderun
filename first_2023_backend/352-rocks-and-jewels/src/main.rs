@@ -4,7 +4,7 @@ use std::{
 };
 fn main() {
     // TODO: just collect hashset and fold second line
-    let kv = io::stdin().lock().lines().take(2).flatten().collect::<Vec<_>>();
+    let kv = io::stdin().lock().lines().map_while(Result::ok).take(2).collect::<Vec<_>>();
     let u = kv[0].chars().collect::<HashSet<char>>();
     let result = u
         .into_iter()
