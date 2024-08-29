@@ -8,6 +8,7 @@ members = [
     "441-tableau",
     "440-queen-amount",
     "439-couple-of-letters",
+    "438-crystals",
 ]
 
 resolver = "2"
