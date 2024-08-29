@@ -12,6 +12,7 @@ members = [
     "435-divisors-number",
     "434-splitting-into-terms",
     "423-nearest-bus-stop",
+    "422-two-teams",
 ]
 
 resolver = "2"
