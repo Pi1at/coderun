@@ -4,6 +4,7 @@ members = [
     "3134-phi-backend",
     "449-combo",
     "445-tiles",
+    "444-tic-tac-toe",
 ]
 
 resolver = "2"
