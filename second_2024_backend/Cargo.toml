@@ -16,6 +16,7 @@ members = [
     "424-lucky-number",
     "426-fair-division",
     "430-paired-codes",
+    "436-work-schedule",
 ]
 
 resolver = "2"
