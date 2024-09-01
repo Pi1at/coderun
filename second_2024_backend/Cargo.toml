@@ -19,6 +19,7 @@ members = [
     "436-work-schedule",
     "437-biggest-square",
     "442-balls-and-baskets",
+    "446-super-marathon",
 ]
 
 resolver = "2"
