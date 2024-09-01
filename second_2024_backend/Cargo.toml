@@ -20,6 +20,7 @@ members = [
     "437-biggest-square",
     "442-balls-and-baskets",
     "446-super-marathon",
+    "447-gcd",
 ]
 
 resolver = "2"
