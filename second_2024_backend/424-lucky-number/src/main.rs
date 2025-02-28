@@ -173,8 +173,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
 
-    use std::time::Instant;
-
     use super::*;
 
     fn solve_naive(s: impl AsRef<str>) -> String {
@@ -242,27 +240,52 @@ mod tests {
         }
     }
 
-    fn generate_str(digits: usize) -> String {
-        let mut s = String::with_capacity(digits);
-        let t = Instant::now();
-        while s.len() < digits {
-            #[allow(clippy::cast_possible_truncation)]
-            let d = t.elapsed().as_nanos().rem_euclid(10) as u32;
-            s.push(char::from_digit(d, 10).unwrap());
+    fn rng_iter() -> impl Iterator<Item = u64> {
+        use std::hash::{BuildHasher, Hasher, RandomState};
+        let mut random = RandomState::new().build_hasher().finish();
+        std::iter::repeat_with(move || {
+            random ^= random << 13;
+            random ^= random >> 17;
+            random ^= random << 5;
+            random
+        })
+    }
+
+    fn generate_num_str(digits: usize) -> String {
+        let data = rng_iter()
+            .flat_map(u64::to_ne_bytes)
+            .map(|v| (v % 10) + b'0')
+            .skip_while(|&v| v == 0)
+            .take(digits)
+            .collect();
+        // SAFETY: All bytes are valid ASCII digits
+        unsafe { String::from_utf8_unchecked(data) }
+    }
+
+    #[test]
+    fn test_num_str_start_with_non_zero() {
+        for i in 1..500 {
+            let s = generate_num_str(i);
+            if s.as_bytes()[0] == b'0' {
+                println!("{i}: {s}");
+                unreachable!();
+            }
         }
-        s
     }
 
     #[test]
     fn test_measure() {
-        for i in 1..50_000 {
-            let s = generate_str(i * 2);
-            //println!("{}: {s}", i * 2);
+        let mut ts = Vec::with_capacity(50_000);
+        for i in 1..50 {
+            let s = generate_num_str(i * 2);
+            println!("{}: {s}", i * 2);
             let mut b = LuckyNumber::from_str(&s).unwrap();
-            let t = Instant::now();
+            let t = std::time::Instant::now();
             b.next_lucky_fast();
-            let d2 = t.elapsed();
-            println!("{}: time {d2:?}", i * 2);
+            ts.push(t.elapsed());
+        }
+        for (idx, t) in ts.iter().enumerate() {
+            println!("{}: time {t:?}", idx * 2);
         }
     }
 
