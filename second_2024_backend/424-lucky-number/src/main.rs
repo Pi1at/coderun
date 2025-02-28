@@ -253,10 +253,12 @@ mod tests {
 
     fn generate_num_str(digits: usize) -> String {
         let data = rng_iter()
-            .map(|v| (v % 10) as u8 + b'0')
+            .flat_map(u64::to_ne_bytes)
+            .map(|v| (v % 10) + b'0')
             .skip_while(|&v| v == 0)
             .take(digits)
             .collect();
+        // SAFETY: All bytes are valid ASCII digits
         unsafe { String::from_utf8_unchecked(data) }
     }
 
