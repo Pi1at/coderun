@@ -1,13 +1,9 @@
 [package]
-name = "questions-about-maximum"
+name    = "questions-about-maximum"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-bittyset = "0.1.0"
-rand = "0.8.5"
 
 [lints]
 workspace = true
