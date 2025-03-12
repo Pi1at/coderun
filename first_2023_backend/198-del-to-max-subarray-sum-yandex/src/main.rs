@@ -1,13 +1,9 @@
-use std::{
-    fmt::{Debug, Display},
-    io::{self, BufRead, BufWriter, Error, Write},
-    ops::{Add, AddAssign},
-};
+use std::fmt::{Debug, Display};
+use std::io::{self, BufRead, BufWriter, Error, Write};
+use std::ops::{Add, AddAssign};
 
 fn ka_c_rem_k<T>(a: &[T], k: usize) -> T
-where
-    T: Ord + Copy + Add<Output = T> + AddAssign + Default + Debug + Display,
-{
+where T: Ord + Copy + Add<Output = T> + AddAssign + Default + Debug + Display {
     if a.is_empty() {
         return T::default();
     }
@@ -126,9 +122,7 @@ where
     r
 }
 
-fn run_me(a: &[isize], k: usize) -> isize {
-    ka_c_rem_k(a, k)
-}
+fn run_me(a: &[i64], k: usize) -> i64 { ka_c_rem_k(a, k) }
 
 fn main() -> Result<(), Error> {
     let mut out = BufWriter::new(std::io::stdout().lock());
@@ -155,28 +149,26 @@ trait BinaryIndex {
 }
 impl BinaryIndex for usize {
     #[inline]
-    fn c(&self) -> usize {
-        self & 1
-    }
+    fn c(&self) -> usize { self & 1 }
+
     #[inline]
-    fn p(&self) -> usize {
-        (self - 1) & 1
-    }
+    fn p(&self) -> usize { (self - 1) & 1 }
+
     #[inline]
-    fn n(&self) -> usize {
-        (self + 1) & 1
-    }
+    fn n(&self) -> usize { (self + 1) & 1 }
 }
 
 #[cfg(test)]
 mod test {
     use std::ops::Sub;
 
-    use {super::*, rand::seq::SliceRandom, rand::Rng};
+    use rand::Rng;
+    use rand::seq::SliceRandom;
+
+    use super::*;
 
     fn kadane_linear_remove_k_sum<T>(a: &[T], k: usize) -> T
-    where
-        T: Ord + Debug + Display + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + Default,
+    where T: Ord + Debug + Display + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + Default
     {
         let mut max_el = a[0];
         let mut dp = vec![vec![T::default(); k + 1]; a.len()];
@@ -202,11 +194,7 @@ mod test {
         });
 
         // all array is negative
-        if max_el < T::default() {
-            max_el
-        } else {
-            res
-        }
+        if max_el < T::default() { max_el } else { res }
     }
 
     #[test]
@@ -375,15 +363,15 @@ mod test {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn huge_random_array_exact_k_negative() {
-        let max_n = 7000_usize;
-        let min_n = 1_usize;
-        let min_k = 0_usize;
-        let max_a: isize = 10_isize.pow(2);
-        let min_a: isize = -max_a;
+        let max_n = 7000;
+        let min_n = 1;
+        let min_k = 0;
+        let max_a = 10_i64.pow(2);
+        let min_a = -max_a;
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
-        let mut a: Vec<isize> = Vec::with_capacity(max_n);
+        let mut a: Vec<_> = Vec::with_capacity(max_n);
         let mut s = 0;
 
         // выбираем кол-во множителей
@@ -394,21 +382,21 @@ mod test {
         let mut i = 0;
         loop {
             i += 1;
-            let n = rng.gen_range(min_n..=max_n);
-            let k = rng.gen_range(min_k..=100.min(n - 1));
+            let n = rng.random_range(min_n..=max_n);
+            let k = rng.random_range(min_k..=100.min(n - 1));
 
-            let mut total_sum: isize = 0;
-            let mut pos_s = 0_isize;
-            let mut neg_s = 0_isize;
+            let mut total_sum = 0;
+            let mut pos_s = 0;
+            let mut neg_s = 0;
 
             (0..k).for_each(|_i| {
-                let ai = rng.gen_range(min_a..=-1);
+                let ai = rng.random_range(min_a..=-1);
                 a.push(ai);
                 neg_s += ai;
                 total_sum += ai;
             });
             (k..n).for_each(|_i| {
-                let ai = rng.gen_range(0..=max_a);
+                let ai = rng.random_range(0..=max_a);
                 a.push(ai);
                 total_sum += ai;
                 pos_s += ai;

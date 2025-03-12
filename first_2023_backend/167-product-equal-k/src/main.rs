@@ -1,7 +1,5 @@
-use std::{
-    cmp,
-    io::{self, BufRead},
-};
+use std::cmp;
+use std::io::{self, BufRead};
 
 fn find_div_nn(numbers: &[(usize, usize)], i: usize, k: usize, m: usize) -> Option<Vec<usize>> {
     let n = numbers.len();
@@ -99,8 +97,10 @@ mod test {
 
     use std::time;
 
+    use rand::Rng;
+    use rand::seq::SliceRandom;
+
     use super::*;
-    use rand::{seq::SliceRandom, Rng};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
@@ -110,7 +110,7 @@ mod test {
         let max_nk = 5000_usize;
         let min_nk = 1_usize;
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut m: usize;
         let mut a: Vec<usize> = Vec::with_capacity(max_nk);
 
@@ -120,13 +120,13 @@ mod test {
         // генерим еще рандомных элементов и добавляем в массив
         // переставляем их местами
         loop {
-            let k = rng.gen_range(min_nk..=max_nk);
-            let n = rng.gen_range(k..=max_nk);
+            let k = rng.random_range(min_nk..=max_nk);
+            let n = rng.random_range(k..=max_nk);
 
             loop {
                 let mut new_max = max_m;
                 for _z in 0..k {
-                    let ai = rng.gen_range(min_m..=new_max);
+                    let ai = rng.random_range(min_m..=new_max);
                     a.push(ai);
                     if ai != 0 {
                         new_max /= ai;
@@ -143,7 +143,7 @@ mod test {
             println!("--------------------");
             //print!("множители {:?}", a);
             for _x in 0..(n - a.len()) {
-                a.push(rng.gen_range(min_m..=300));
+                a.push(rng.random_range(min_m..=300));
             }
             a.shuffle(&mut rng);
 

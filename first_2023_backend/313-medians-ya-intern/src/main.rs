@@ -1,9 +1,6 @@
-use std::{
-    io::{self, BufRead},
-    println,
-};
-
 use std::collections::BinaryHeap;
+use std::io::{self, BufRead};
+use std::println;
 
 fn run_me(arr: &[isize]) -> isize {
     // bh returns max element, and we need minimum of maximums so lets play
@@ -36,5 +33,5 @@ fn main() {
 #[cfg(test)]
 mod test {
     #[allow(unused_imports)]
-    use {super::*, core::panic, rand::seq::SliceRandom, rand::Rng};
+    use {super::*, core::panic};
 }

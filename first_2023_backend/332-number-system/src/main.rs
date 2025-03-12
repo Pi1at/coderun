@@ -1,7 +1,5 @@
-use std::{
-    collections::HashMap,
-    io::{self, BufRead},
-};
+use std::collections::HashMap;
+use std::io::{self, BufRead};
 
 fn horners_method(coefficients: &[i32], x: i32) -> i32 {
     // assert!(coefficients.len() > 0);
@@ -32,18 +30,18 @@ fn run_me(input: &str) -> i32 {
                 let i: i32 = index.to_digit(36).unwrap() as i32;
                 min_base = min_base.max(i + 1);
                 number.push(i);
-            }
+            },
             '-' => {
                 modify_number(-sign, &mut number, &mut powers);
-            }
+            },
             '=' => {
                 modify_number(sign, &mut number, &mut powers);
                 sign = -1;
-            }
+            },
             '+' => {
                 modify_number(sign, &mut number, &mut powers);
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
     modify_number(sign, &mut number, &mut powers);
