@@ -3,11 +3,9 @@ use std::io::{self, BufRead, BufWriter, Write};
 use crate::treap_list::TreapList;
 
 pub mod xor_shift_rng {
-    use std::{
-        collections::hash_map::RandomState,
-        hash::{BuildHasher, Hasher},
-        iter::repeat_with,
-    };
+    use std::collections::hash_map::RandomState;
+    use std::hash::{BuildHasher, Hasher};
+    use std::iter::repeat_with;
 
     pub struct XorShiftRng {
         state: u32,
@@ -16,7 +14,8 @@ pub mod xor_shift_rng {
     impl XorShiftRng {
         // Pseudorandom number generator from the "Xorshift RNGs" paper by George Marsaglia.
         //
-        // https://github.com/matklad/config/blob/b8ea0aad0f86d4575651a390a3c7aefb63229774/templates/snippets/src/lib.rs#L30
+        // https://github.com/matklad/config/blob/b8ea0aad0f86d4575651a390a3c7aefb63229774/
+        // templates/snippets/src/lib.rs#L30
         // https://github.com/rust-lang/rust/blob/1.55.0/library/core/src/slice/sort.rs#L559-L573
 
         #[must_use]
@@ -26,9 +25,7 @@ pub mod xor_shift_rng {
             Self::with_seed(seed)
         }
 
-        const fn with_seed(seed: u32) -> Self {
-            Self { state: seed }
-        }
+        const fn with_seed(seed: u32) -> Self { Self { state: seed } }
 
         pub fn next_u32(&mut self) -> u32 {
             self.state ^= self.state << 13;
@@ -51,7 +48,8 @@ pub mod xor_shift_rng {
 }
 
 pub mod implicit_treap {
-    use std::{cmp::Ordering, mem};
+    use std::cmp::Ordering;
+    use std::mem;
 
     pub type Tree<T> = Option<Box<ImplicitNode<T>>>;
 
@@ -69,7 +67,7 @@ pub mod implicit_treap {
                     r_node.update();
                     *l_tree = Some(r_node);
                 }
-            }
+            },
             (new_tree, None) | (None, new_tree) => *l_tree = new_tree,
         }
     }
@@ -84,13 +82,13 @@ pub mod implicit_treap {
                     node.left = res;
                     node.update();
                     Some(node)
-                }
+                },
                 _ => {
                     let ret = split(&mut node.right, index - key, left_inclusive);
                     node.update();
                     *tree = Some(node);
                     ret
-                }
+                },
             }
         })
     }
@@ -122,17 +120,17 @@ pub mod implicit_treap {
                     let ret = remove(&mut node.left, index);
                     node.update();
                     return ret;
-                }
+                },
                 Ordering::Greater => {
                     let ret = remove(&mut node.right, index - key);
                     node.update();
                     return ret;
-                }
+                },
                 Ordering::Equal => {
                     let ImplicitNode { ref mut left, ref mut right, .. } = &mut **node;
                     merge(left, right.take());
                     left.take()
-                }
+                },
             }
         };
 
@@ -185,14 +183,10 @@ pub mod implicit_treap {
     }
 
     #[must_use]
-    pub fn len<T>(tree: &Tree<T>) -> usize {
-        tree.as_ref().map_or(0, |node| node.len())
-    }
+    pub fn len<T>(tree: &Tree<T>) -> usize { tree.as_ref().map_or(0, |node| node.len()) }
 
     pub fn index_of<T>(tree: &Tree<T>, v: &T) -> usize
-    where
-        T: PartialOrd,
-    {
+    where T: PartialOrd {
         let mut node = tree.as_deref();
         let mut index = 0;
 
@@ -221,12 +215,9 @@ pub mod implicit_treap {
             Self { value, priority, len: 1, left: None, right: None }
         }
 
-        pub const fn len(&self) -> usize {
-            self.len
-        }
-        pub const fn is_empty(&self) -> bool {
-            self.len == 0
-        }
+        pub const fn len(&self) -> usize { self.len }
+
+        pub const fn is_empty(&self) -> bool { self.len == 0 }
 
         pub fn update(&mut self) {
             let Self { ref mut len, ref left, ref right, .. } = self;
@@ -247,10 +238,8 @@ pub mod implicit_treap {
 
 pub mod treap_list {
 
-    use crate::{
-        implicit_treap::{self, ImplicitNode, Tree},
-        xor_shift_rng::XorShiftRng,
-    };
+    use crate::implicit_treap::{self, ImplicitNode, Tree};
+    use crate::xor_shift_rng::XorShiftRng;
     /// A list backed by an implicit treap.
     ///
     /// Provides efficient insertion, removal, and access operations.
@@ -260,14 +249,11 @@ pub mod treap_list {
     }
 
     impl<T> From<&[T]> for TreapList<T>
-    where
-        T: PartialOrd + Copy,
+    where T: PartialOrd + Copy
     {
         fn from(item: &[T]) -> Self {
             fn build<T>(a: &[T], rng: &mut impl Iterator<Item = u32>) -> Tree<T>
-            where
-                T: PartialOrd + Copy,
-            {
+            where T: PartialOrd + Copy {
                 if a.is_empty() {
                     return None;
                 }
@@ -286,16 +272,14 @@ pub mod treap_list {
         }
     }
     impl<T> TreapList<T>
-    where
-        T: PartialOrd,
+    where T: PartialOrd
     {
         /// Constructs a new, empty `TreapList<T>`.
         #[must_use]
-        pub fn new() -> Self {
-            Self { tree: None, rng: XorShiftRng::with_random_seed() }
-        }
+        pub fn new() -> Self { Self { tree: None, rng: XorShiftRng::with_random_seed() } }
 
-        /// Inserts a value into the list at a particular index, shifting elements one position to the right if needed.
+        /// Inserts a value into the list at a particular index, shifting elements one position to
+        /// the right if needed.
         pub fn insert(&mut self, index: usize, value: T) {
             let Self { ref mut tree, ref mut rng } = self;
             implicit_treap::insert(tree, index + 1, ImplicitNode::new(value, rng.next_u32()));
@@ -307,9 +291,7 @@ pub mod treap_list {
         }
 
         /// Inserts a value at the front of the list.
-        pub fn push_front(&mut self, value: T) {
-            self.insert(0, value);
-        }
+        pub fn push_front(&mut self, value: T) { self.insert(0, value); }
 
         /// Inserts a value at the back of the list.
         pub fn push_back(&mut self, value: T) {
@@ -318,9 +300,7 @@ pub mod treap_list {
         }
 
         /// Removes a value at the front of the list.
-        pub fn pop_front(&mut self) -> T {
-            self.remove(0)
-        }
+        pub fn pop_front(&mut self) -> T { self.remove(0) }
 
         /// Removes a value at the back of the list.
         pub fn pop_back(&mut self) -> T {
@@ -328,33 +308,27 @@ pub mod treap_list {
             self.remove(index)
         }
 
-        /// Returns an immutable reference to the value at a particular index. Returns `None` if the index is out of bounds.
+        /// Returns an immutable reference to the value at a particular index. Returns `None` if the
+        /// index is out of bounds.
         #[must_use]
-        pub fn get(&self, index: usize) -> Option<&T> {
-            implicit_treap::get(&self.tree, index + 1)
-        }
+        pub fn get(&self, index: usize) -> Option<&T> { implicit_treap::get(&self.tree, index + 1) }
 
-        /// Returns a mutable reference to the value at a particular index. Returns `None` if the index is out of bounds.
+        /// Returns a mutable reference to the value at a particular index. Returns `None` if the
+        /// index is out of bounds.
         pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
             implicit_treap::get_mut(&mut self.tree, index + 1)
         }
 
         /// Returns the number of elements in the list.
         #[must_use]
-        pub fn len(&self) -> usize {
-            implicit_treap::len(&self.tree)
-        }
+        pub fn len(&self) -> usize { implicit_treap::len(&self.tree) }
 
         /// Returns `true` if the list is empty.
         #[must_use]
-        pub const fn is_empty(&self) -> bool {
-            self.tree.is_none()
-        }
+        pub const fn is_empty(&self) -> bool { self.tree.is_none() }
 
         /// Clears the list, removing all values.
-        pub fn clear(&mut self) {
-            self.tree = None;
-        }
+        pub fn clear(&mut self) { self.tree = None; }
 
         /// Return index of a value in the list.
         pub fn index_of(&self, v: &T) -> Option<usize> {
@@ -366,12 +340,9 @@ pub mod treap_list {
     }
 
     impl<T> Default for TreapList<T>
-    where
-        T: PartialOrd,
+    where T: PartialOrd
     {
-        fn default() -> Self {
-            Self::new()
-        }
+        fn default() -> Self { Self::new() }
     }
 }
 
@@ -409,8 +380,7 @@ fn run_me(input: &str, m: usize, decrypt: bool) -> Box<dyn Iterator<Item = usize
 
 fn main() {
     let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
-    let stdin = io::stdin();
-    let mut line_iter = stdin.lock().lines();
+    let mut line_iter = io::stdin().lock().lines();
 
     let nmt = line_iter
         .next()
@@ -431,7 +401,9 @@ fn main() {
 #[cfg(test)]
 mod tests {
 
-    use {super::*, rand::Rng};
+    use rand::Rng;
+
+    use super::*;
 
     #[test]
     fn test_1() {
@@ -451,7 +423,7 @@ mod tests {
 
     #[test]
     fn big_n_m() {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         // length
         let max_n = 300_000_usize;
         let min_n = 300_000_usize;
@@ -460,15 +432,15 @@ mod tests {
         let min_m = 300_000_usize;
 
         for _ in 0..10 {
-            let n = rng.gen_range(min_n..=max_n);
-            let m = rng.gen_range(min_m..=max_m);
+            let n = rng.random_range(min_n..=max_n);
+            let m = rng.random_range(min_m..=max_m);
 
             println!("len: {n:<10} max: {m:<10}");
 
             //let before = Instant::now();
             println!("building string");
             let orig = (0..n)
-                .map(|_| rng.gen_range(1..=m))
+                .map(|_| rng.random_range(1..=m))
                 .map(|x| x.to_string())
                 .collect::<Vec<_>>()
                 .join(" ");
