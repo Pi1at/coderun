@@ -1,20 +1,42 @@
 [workspace]
-members = [
-    "3134-phi-backend",
-    "427-microwave",
-]
-resolver = "2"
-[profile.release]
-debug = 1
-[workspace.lints.clippy]
-#cargo       = "warn"
-all         = "warn"
-complexity  = "warn"
-correctness = "deny"
-nursery     = "warn"
-pedantic    = "warn"
-perf        = "deny"
-style       = "warn"
-suspicious  = "warn"
 
-cast_possible_truncation = "warn"
+members = [
+    "427-microwave",
+    "3134-phi-backend",
+    "422-two-teams",
+    "423-nearest-bus-stop",
+    "424-lucky-number",
+    "425-questions-about-maximum",
+    "426-fair-division",
+    "430-paired-codes",
+    "434-splitting-into-terms",
+    "435-divisors-number",
+    "436-work-schedule",
+    "437-biggest-square",
+    "438-crystals",
+    "439-couple-of-letters",
+    "440-queen-amount",
+    "441-tableau",
+    "442-balls-and-baskets",
+    "444-tic-tac-toe",
+    "445-tiles",
+    "446-super-marathon",
+    "447-gcd",
+    "449-combo",
+]
+
+resolver = "2"
+
+[profile.release]
+
+debug = 1
+
+[workspace.lints.clippy]
+
+#all = correctness, suspicious, style, complexity, perf
+all      = { level = "deny", priority = -2 }
+nursery  = { level = "warn", priority = -1 } #default allow
+pedantic = { level = "warn", priority = -1 } #default allow
+
+separated_literal_suffix   = "allow"
+unseparated_literal_suffix = "deny"
