@@ -1,0 +1,18 @@
+[package]
+name = "queen-amount"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[lints]
+workspace = true
+[package]
+name = "queen-amount"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[lints]
+workspace = true

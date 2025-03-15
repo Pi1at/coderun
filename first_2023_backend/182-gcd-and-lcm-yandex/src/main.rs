@@ -1,8 +1,7 @@
 use std::io::{self, BufRead};
 
-const fn total_prime_factors(n: u64) -> u64 {
+const fn total_prime_factors(mut n: u64) -> u64 {
     let mut count = 0;
-    let mut n = n;
     // четное
     // TODO: trailing zeroes?
     if n % 2 == 0 {

@@ -1,8 +1,6 @@
-use std::{
-    f64::consts::SQRT_2,
-    io::{self, BufRead},
-    println,
-};
+use std::f64::consts::SQRT_2;
+use std::io::{self, BufRead};
+use std::println;
 
 fn run_me(points: &[(f64, f64)], r: f64) -> f64 {
     points.iter().map(|center| get_intersect_area(center.0, center.1, r)).sum()
@@ -51,27 +49,26 @@ fn get_intersect_area(cx: f64, cy: f64, r: f64) -> f64 {
         return 1.0;
     };
     let ab = [(1.0 - cx, cy), (1.0 - cy, 1.0 - cx), (cx, 1.0 - cy), (cy, cx)];
-    ab.iter().map(|(a, b)| get_circle_line_area(*a, *b, r)).sum()
+    ab.iter().map(|&(a, b)| get_circle_line_area(a, b, r)).sum()
 }
 
 #[cfg(test)]
 mod test {
+
+    use rand::Rng;
+
     use super::*;
-    #[allow(unused_imports)]
-    use core::panic;
-    #[allow(unused_imports)]
-    use rand::{seq::SliceRandom, Rng};
 
     #[test]
     fn random_dot() {
-        let mut rng = rand::thread_rng();
-        let max_dots: usize = rng.gen_range(300..=1000);
-        let _r = rng.gen_range(0.001..=2.0);
+        let mut rng = rand::rng();
+        let max_dots: usize = rng.random_range(300..=1000);
+        let _r = rng.random_range(0.001..=2.0);
 
         for _cd in 1..=max_dots {
-            let r = rng.gen_range(0.001..=2.0);
-            let a = rng.gen_range(0.001..=0.999);
-            let b = rng.gen_range(0.001..=0.999);
+            let r = rng.random_range(0.001..=2.0);
+            let a = rng.random_range(0.001..=0.999);
+            let b = rng.random_range(0.001..=0.999);
             let _ = get_intersect_area(a, b, r);
         }
         assert_eq!(0, 0);

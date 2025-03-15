@@ -1,0 +1,18 @@
+[package]
+name = "tic-tac-toe"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[lints]
+workspace = true
+[package]
+name = "tic-tac-toe"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[lints]
+workspace = true

@@ -1,15 +1,11 @@
 // some theory
 // https://math.stackexchange.com/questions/222674/average-bus-waiting-time
-use std::{
-    io::{self, BufRead},
-    ops::{AddAssign, Mul},
-    println,
-};
+use std::io::{self, BufRead};
+use std::ops::{AddAssign, Mul};
+use std::println;
 
 fn multiply_polynomials<T>(a: &[T], b: &[T]) -> Vec<T>
-where
-    T: Mul<Output = T> + Default + Copy + AddAssign,
-{
+where T: Mul<Output = T> + Default + Copy + AddAssign {
     let mut c = vec![T::default(); a.len() + b.len() - 1];
     (0..a.len()).for_each(|i| {
         (0..b.len()).for_each(|j| {
@@ -33,6 +29,7 @@ fn multiply_t(t: &[isize]) -> Vec<isize> {
 }
 
 fn power_up(p: &[isize]) -> (Vec<isize>, isize) {
+    #![allow(clippy::cast_possible_wrap)]
     // for each p[i]*x^i
     // z[i+1] = p[i]*(p/i+1)
     // q[i+1] =
@@ -113,7 +110,7 @@ fn main() {
 #[cfg(test)]
 mod test {
     #[allow(unused_imports)]
-    use {super::*, core::panic, rand::seq::SliceRandom, rand::Rng};
+    use {super::*, core::panic};
 
     #[test]
     fn test_50_49_48_47_46() {

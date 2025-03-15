@@ -1,8 +1,6 @@
 // 306. День недели
-use std::{
-    io::{self, BufRead},
-    println,
-};
+use std::io::{self, BufRead};
+use std::println;
 
 fn run_me(s: &[String]) {
     const DAYNUM_TO_STR: [&str; 7] =
@@ -57,14 +55,4 @@ fn main() {
     let line_iter = stdin.lock().lines();
     let s_dates = line_iter.map_while(Result::ok).collect::<Vec<_>>();
     run_me(&s_dates);
-}
-
-#[cfg(test)]
-mod test {
-    #[allow(unused_imports)]
-    use {
-        super::*,
-        core::panic,
-        rand::{seq::SliceRandom, Rng},
-    };
 }

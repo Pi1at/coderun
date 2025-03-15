@@ -1,3 +1,4 @@
+use std::cmp;
 use std::io::{self, BufRead};
 
 fn find_div_nn(numbers: &[(usize, usize)], i: usize, k: usize, m: usize) -> Option<Vec<usize>> {
@@ -43,19 +44,19 @@ fn find_k_eq_m(a: &[(usize, usize)], k: usize, m: usize) -> Vec<usize> {
 
     // m = 0, peek k-1 numbers and 0
     if m == 0 {
-        let mut b = a.iter().filter(|(i, num)| (*i <= k) || *num == 0).collect::<Vec<_>>();
-        b.sort_unstable_by_key(|(_, num)| *num);
-        return b.iter().take(k).map(|(idx, _)| idx + 1).collect::<Vec<_>>();
+        let mut b = a.iter().filter(|&&(i, num)| (i <= k) || num == 0).collect::<Vec<_>>();
+        b.sort_unstable_by_key(|&&(_, num)| num);
+        return b.iter().take(k).map(|&&(idx, _)| idx + 1).collect::<Vec<_>>();
     }
 
     // m > 0, lets filter out some obv and sort in descend order
 
     let mut b = a
         .iter()
-        .filter_map(|&(idx, num)| if num <= m { Some((idx, num)) } else { None })
+        .filter_map(|&(idx, num)| (num <= m).then_some((idx, num)))
         .collect::<Vec<(_, _)>>();
 
-    b.sort_unstable_by_key(|&(_, num)| std::cmp::Reverse(num));
+    b.sort_unstable_by_key(|&(_, num)| cmp::Reverse(num));
 
     let ans = find_div_nn(&b, 0, k, m);
 
@@ -94,8 +95,12 @@ fn main() {
 #[cfg(test)]
 mod test {
 
+    use std::time;
+
+    use rand::Rng;
+    use rand::seq::SliceRandom;
+
     use super::*;
-    use rand::{seq::SliceRandom, Rng};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
@@ -105,7 +110,7 @@ mod test {
         let max_nk = 5000_usize;
         let min_nk = 1_usize;
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut m: usize;
         let mut a: Vec<usize> = Vec::with_capacity(max_nk);
 
@@ -115,13 +120,13 @@ mod test {
         // генерим еще рандомных элементов и добавляем в массив
         // переставляем их местами
         loop {
-            let k = rng.gen_range(min_nk..=max_nk);
-            let n = rng.gen_range(k..=max_nk);
+            let k = rng.random_range(min_nk..=max_nk);
+            let n = rng.random_range(k..=max_nk);
 
             loop {
                 let mut new_max = max_m;
                 for _z in 0..k {
-                    let ai = rng.gen_range(min_m..=new_max);
+                    let ai = rng.random_range(min_m..=new_max);
                     a.push(ai);
                     if ai != 0 {
                         new_max /= ai;
@@ -138,16 +143,16 @@ mod test {
             println!("--------------------");
             //print!("множители {:?}", a);
             for _x in 0..(n - a.len()) {
-                a.push(rng.gen_range(min_m..=300));
+                a.push(rng.random_range(min_m..=300));
             }
             a.shuffle(&mut rng);
 
             println!();
-            let b = a.iter().enumerate().map(|(k, &v)| (k, v)).collect::<Vec<_>>();
+            let b = a.iter().copied().enumerate().collect::<Vec<_>>();
 
             println!("N = {n} K = {k}");
             print!("FIND {m} =");
-            let before = std::time::Instant::now();
+            let before = time::Instant::now();
             let ans = find_k_eq_m(&b, k, m);
             let d = before.elapsed();
             println!("Elapsed time: {:.2?}", before.elapsed());
