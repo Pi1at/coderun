@@ -2,14 +2,11 @@ use std::io::BufRead;
 
 use lib::read_pair;
 
+#[allow(clippy::significant_drop_tightening)]
 fn main() {
-    #![allow(clippy::significant_drop_tightening)]
     let mut lines = std::io::stdin().lock().lines().map_while(Result::ok);
     let (rows, cols) = read_pair(&lines.next().unwrap());
-    let board = lines.take(rows).fold(Vec::with_capacity(rows), |mut acc, line| {
-        acc.push(line.as_bytes().to_vec());
-        acc
-    });
+    let board: Vec<Vec<u8>> = lines.take(rows).map(|line| line.as_bytes().to_vec()).collect();
 
     let mut is_win = false;
     'outer: for row in 0..rows {
