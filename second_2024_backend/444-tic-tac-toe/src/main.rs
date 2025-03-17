@@ -1,188 +1,89 @@
-use std::io::{self, BufWriter, Write};
+use std::io::BufRead;
+use std::iter::{self};
 
-use lib::{read_input, read_pair};
-
-use domain::{Counter, Field, ADIAG, DIAG, HORIZ, VERT};
+use domain::{Counter, update_counters};
+use lib::read_pair;
 
 pub mod domain {
-    use std::{convert::Infallible, str::FromStr};
+    use std::iter;
+    use std::ops::{Index, IndexMut};
 
-    #[derive(Eq, PartialEq, Hash, Debug, Default, Clone)]
-    pub enum Field {
-        #[default]
-        Empty,
-        Crosses,
-        Noughts,
-    }
-
-    impl FromStr for Field {
-        type Err = Infallible;
-        fn from_str(s: &str) -> Result<Self, Self::Err> {
-            match s {
-                "X" => Ok(Self::Crosses),
-                "O" => Ok(Self::Noughts),
-                "." => Ok(Self::Empty),
-                _ => Ok(Self::default()), // Orly
-            }
-        }
-    }
-
-    impl From<u8> for Field {
-        fn from(value: u8) -> Self {
-            match value {
-                b'X' => Self::Crosses,
-                b'O' => Self::Noughts,
-                b'.' => Self::Empty,
-                _ => unreachable!(), // Orly
-            }
-        }
-    }
-    impl From<&u8> for Field {
-        fn from(value: &u8) -> Self {
-            match value {
-                b'X' => Self::Crosses,
-                b'O' => Self::Noughts,
-                b'.' => Self::Empty,
-                _ => unreachable!(), // Orly
-            }
-        }
-    }
     #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Copy, Clone)]
     pub struct Counter {
-        pub h: u8, // horizontal
-        pub v: u8, // vertical
-        pub d: u8, // diagonal
-        pub r: u8, // reverse diagonal
+        // h v d r
+        counters: [u8; 4],
     }
     impl Counter {
         #[must_use]
-        pub fn new() -> Self {
-            Self::default()
-        }
+        pub fn new() -> Self { Self::default() }
+
         #[must_use]
-        pub fn max_v(&self) -> u8 {
-            self.h.max(self.v).max(self.d.max(self.r))
-        }
+        pub fn max(&self) -> u8 { self.counters.into_iter().max().unwrap_or_default() }
     }
-    pub const HORIZ: [(isize, isize); 4] = [(1, 0), (2, 0), (3, 0), (4, 0)];
-    pub const VERT: [(isize, isize); 4] = [(0, 1), (0, 2), (0, 3), (0, 4)];
-    pub const DIAG: [(isize, isize); 4] = [(1, 1), (2, 2), (3, 3), (4, 4)];
-    pub const ADIAG: [(isize, isize); 4] = [(-1, 1), (-2, 2), (-3, 3), (-4, 4)];
+    impl IndexMut<usize> for Counter {
+        fn index_mut(&mut self, index: usize) -> &mut Self::Output { &mut self.counters[index] }
+    }
+    impl Index<usize> for Counter {
+        type Output = u8;
+
+        fn index(&self, index: usize) -> &Self::Output { &self.counters[index] }
+    }
+
+    pub fn update_counters(grid: &mut [Vec<Counter>], (x_0, y_0): (usize, usize)) {
+        let rows = grid.len();
+        let cols = grid[0].len();
+
+        iter::zip(1..=4, 1..=4)
+            .flat_map(|(dx, dy)| {
+                [
+                    ((Some(x_0 + dx), y_0), 0),           // horiz
+                    ((Some(x_0), y_0 + dy), 1),           // vert
+                    ((Some(x_0 + dx), y_0 + dy), 2),      // diag
+                    ((x_0.checked_sub(dx), y_0 + dy), 3), // reverse diag
+                ]
+            })
+            .filter_map(|((s_col, row), idx)| s_col.map(|col| ((col, row), idx)))
+            .filter(|((x, y), _idx)| *x < cols && *y < rows)
+            .for_each(|((col, row), idx)| grid[row][col][idx] += 1);
+    }
 }
 
-// TODO: refactor this mess
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut lines = read_input()?;
-    let mut out = BufWriter::with_capacity(1_000_000, io::stdout().lock());
+//NOTE: compare with read and after traverse approach
+fn main() {
+    let mut lines = std::io::stdin().lock().lines().map_while(Result::ok);
 
-    let (irows, icols) = read_pair::<isize, isize>(&lines.next().unwrap());
-    let (rows, cols) = (irows as usize, icols as usize);
-    let is_valid_coord =
-        |(col, row): (isize, isize)| (0..=icols).contains(&col) && (0..=irows).contains(&row);
+    let (rows, cols) = read_pair(&lines.next().unwrap());
+
+    let crosses_board = vec![vec![Counter::default(); cols]; rows];
+    let nougths_board = vec![vec![Counter::default(); cols]; rows];
+    let mut boards = [crosses_board, nougths_board];
 
     let mut is_win = false;
-    let mut crosses_board = vec![vec![Counter::default(); cols]; rows];
-    let mut nougths_board = vec![vec![Counter::default(); cols]; rows];
-
-    for row in 0..irows {
-        for (col, v) in (0..icols).zip(lines.next().unwrap().bytes().map(Field::from)) {
-            match v {
-                Field::Crosses => {
-                    if crosses_board[row as usize][col as usize].max_v() == 4 {
-                        is_win = true;
-                        break;
-                    };
-                    HORIZ
-                        .iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| crosses_board[y][x].h += 1);
-                    VERT.iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| crosses_board[y][x].v += 1);
-                    DIAG.iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| crosses_board[y][x].d += 1);
-                    ADIAG
-                        .iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| crosses_board[y][x].r += 1);
-                }
-                Field::Noughts => {
-                    if nougths_board[row as usize][col as usize].max_v() == 4 {
-                        is_win = true;
-                        break;
-                    };
-                    HORIZ
-                        .iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| nougths_board[y][x].h += 1);
-                    VERT.iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| nougths_board[y][x].v += 1);
-                    DIAG.iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| nougths_board[y][x].d += 1);
-                    ADIAG
-                        .iter()
-                        .map(|(x, y)| (x + col, y + row))
-                        .filter_map(|(x, y)| {
-                            is_valid_coord((x, y)).then_some((x as usize, y as usize))
-                        })
-                        .for_each(|(x, y)| nougths_board[y][x].r += 1);
-                }
-                Field::Empty => {}
+    for row in 0..rows {
+        for (col, idx) in
+            iter::zip(0..cols, lines.next().unwrap().bytes()).filter_map(|(x, v)| match v {
+                b'X' => Some((x, 0)),
+                b'O' => Some((x, 1)),
+                _ => None,
+            })
+        {
+            if boards[idx][row][col].max() == 4 {
+                is_win = true;
+                break;
             };
+            update_counters(&mut boards[idx], (col, row));
         }
         if is_win {
             break;
         }
     }
-    writeln!(out, "{}", if is_win { "Yes" } else { "No" })?;
-    Ok(())
+    drop(lines);
+    println!("{}", if is_win { "Yes" } else { "No" });
 }
-
-// region:    --- Tests
-
-#[cfg(test)]
-mod tests {
-
-    #[allow(unused_imports)]
-    use super::*;
-}
-
-// endregion: --- Tests
 
 // region: --- Lib
 pub mod lib {
-    use std::{
-        env,
-        fmt::Display,
-        fs::File,
-        io::{BufRead, BufReader},
-        path::PathBuf,
-        str::FromStr,
-    };
+    use std::str::FromStr;
 
     pub fn read_pair<T1, T2>(s: &str) -> (T1, T2)
     where
@@ -193,48 +94,6 @@ pub mod lib {
         match (iter.next().map(str::parse), iter.next().map(str::parse)) {
             (Some(Ok(first)), Some(Ok(snd))) => (first, snd),
             _ => unreachable!("input is malformed!"),
-        }
-    }
-
-    #[allow(clippy::missing_errors_doc)]
-    pub fn read_input() -> Result<impl Iterator<Item = String>, Box<dyn std::error::Error>> {
-        let local_mode = env::var("CODERUN_LOCAL").is_ok_and(|m| m == "true");
-        let path = {
-            let mut path = PathBuf::new();
-            if local_mode {
-                path.push(env::var("CARGO_MANIFEST_DIR")?);
-            }
-            path.push("input.txt");
-            path
-        };
-        let file = File::open(path)?;
-        Ok(BufReader::new(file).lines().map_while(Result::ok))
-    }
-
-    pub fn join_into_string<T>(a: &[T]) -> String
-    where
-        T: ToString,
-    {
-        let Some((first, suffix)) = a.split_first() else { return String::new() };
-        let first_owned = first.to_string();
-        suffix.iter().fold(first_owned, |mut a, b| {
-            a.push(' ');
-            a.push_str(&b.to_string());
-            a
-        })
-    }
-
-    pub trait VecStuff<T> {
-        fn print(&self, w: usize);
-    }
-    impl<T: Display + Clone + Copy + 'static> VecStuff<T> for &[T] {
-        fn print(&self, w: usize) {
-            self.iter().enumerate().take(w).for_each(|(i, e)| {
-                if i != 0 {
-                    print!(" ");
-                }
-                print!("{e:5}");
-            });
         }
     }
 }
