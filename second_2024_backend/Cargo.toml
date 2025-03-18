@@ -23,6 +23,7 @@ members = [
     "446-super-marathon",
     "447-gcd",
     "449-combo",
+    "450-team-contest",
 ]
 
 resolver = "2"
@@ -40,3 +41,6 @@ pedantic = { level = "warn", priority = -1 } #default allow
 
 separated_literal_suffix   = "allow"
 unseparated_literal_suffix = "deny"
+
+[workspace.dependencies]
+rand = "0.9.0"
