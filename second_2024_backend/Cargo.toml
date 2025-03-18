@@ -18,6 +18,7 @@ members = [
     "440-queen-amount",
     "441-tableau",
     "442-balls-and-baskets",
+    "443-invervals",
     "444-tic-tac-toe",
     "445-tiles",
     "446-super-marathon",
