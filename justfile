@@ -1,13 +1,9 @@
-s1 := "first_2023_backend"
-s2 := "second_2024_backend"
 user := env_var('USER')
 default:
     @just --list
 
-new number name season=s2:
-    cargo new {{justfile_directory()}}/{{season}}/{{number}}-{{name}} --name {{name}} && touch {{justfile_directory()}}/{{season}}/{{number}}-{{name}}/README.md
-
-
+new name:
+    cargo new {{justfile_directory()}}/problems/{{name}} --name {{name}} && touch {{justfile_directory()}}/problems/{{name}}/README.md
 
 # If the user wants to generate a template straight into the current folder,
 # without creating a subfolder for the contents
